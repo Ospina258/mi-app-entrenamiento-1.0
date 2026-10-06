@@ -2,10 +2,11 @@
   "name": "Mi Entrenamiento",
   "short_name": "Entrena",
   "id": "com.ospina258.entrenamiento",
-  "description": "App para registrar entrenamientos, controlar macros diarios y seguir tu progreso físico.",
+  "description": "App para registrar entrenamientos, controlar macros diarios, seguir tu progreso físico y recibir observaciones personalizadas.",
   "start_url": "/mi-app-entrenamiento-1.0/",
   "scope": "/mi-app-entrenamiento-1.0/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#0F1115",
   "theme_color": "#4F8CFF",
@@ -24,6 +25,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
