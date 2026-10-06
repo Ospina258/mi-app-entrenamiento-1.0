@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mi Entrenamiento</title>
-
-<!-- ====== ETIQUETAS PWA (para instalar como app) ====== -->
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#4f8cff" />
 <link rel="apple-touch-icon" href="icono-192.png" />
@@ -14,8 +12,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Entrenamiento" />
 <meta name="application-name" content="Entrenamiento" />
-<!-- ==================================================== -->
-
 <style>
   :root{
     --bg:#0f1115; --card:#1a1d24; --card2:#22262f; --accent:#4f8cff;
@@ -46,17 +42,22 @@
   .btn{padding:12px 16px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; background:var(--accent); color:#fff; width:100%; margin-top:16px;}
   .btn:hover{background:var(--accent2);}
   .btn-sec{background:var(--card2); color:var(--text); border:1px solid var(--border);}
-  .set-row{display:grid; grid-template-columns:28px 1fr 1fr 34px; gap:8px; align-items:center; margin-top:8px;}
+  .set-row{display:grid; grid-template-columns:28px 1fr 1fr 40px 34px; gap:6px; align-items:center; margin-top:8px;}
   .set-num{width:28px; height:28px; border-radius:50%; background:var(--card2); color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;}
-  .set-row input{padding:8px 10px; font-size:14px;}
+  .set-row input[type=number]{padding:8px 6px; font-size:14px;}
+  .set-row input[type=checkbox]{display:none;}
+  .drop-toggle{display:flex; align-items:center; justify-content:center; height:34px; border-radius:8px; background:transparent; border:1px solid var(--border); cursor:pointer; font-size:16px; opacity:.4; transition:.2s;}
+  .drop-toggle.on{opacity:1; background:rgba(243,156,18,.15); border-color:var(--orange);}
   .btn-remove{width:34px; height:34px; border-radius:8px; background:transparent; color:var(--red); border:1px solid var(--border); cursor:pointer; padding:0;}
   .add-set{background:transparent; color:var(--accent); border:1px dashed var(--accent); padding:9px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; margin-top:10px; width:100%;}
   .workout-item{background:var(--card2); border-radius:10px; padding:12px; margin-bottom:8px; border:1px solid var(--border);}
   .workout-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
   .workout-title{font-weight:700; font-size:14px;}
   .workout-date{font-size:12px; color:var(--muted);}
-  .workout-sets{font-size:13px; color:var(--muted); line-height:1.5;}
+  .workout-sets{font-size:13px; color:var(--muted); line-height:1.6;}
   .workout-sets span{color:var(--text); font-weight:600;}
+  .set-chip{display:inline-block; padding:2px 6px; margin:2px 3px 2px 0; border-radius:5px; background:rgba(255,255,255,.05); font-size:12px;}
+  .set-chip.drop{background:rgba(243,156,18,.15); border:1px solid rgba(243,156,18,.4);}
   .day-title{font-size:14px; font-weight:700; color:var(--accent); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;}
   .del-btn{background:transparent; border:none; color:var(--red); cursor:pointer; font-size:14px; opacity:.6;}
   .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-bottom:14px;}
@@ -107,12 +108,14 @@
   .badge-red{background:rgba(231,76,60,.15); color:var(--red);}
   .badge-yellow{background:rgba(241,196,15,.15); color:var(--yellow);}
   .badge-blue{background:rgba(79,140,255,.15); color:var(--accent);}
+  .badge-purple{background:rgba(155,89,182,.15); color:var(--purple);}
   .info-box{background:rgba(79,140,255,.08); border:1px solid rgba(79,140,255,.3); padding:12px; border-radius:10px; font-size:13px; color:var(--muted); margin-top:12px; line-height:1.6;}
   .info-box b{color:var(--text);}
   .alert{padding:12px; border-radius:10px; font-size:13px; margin-bottom:8px; line-height:1.5;}
   .alert-red{background:rgba(231,76,60,.12); border:1px solid rgba(231,76,60,.4); color:#f5b7b1;}
   .alert-green{background:rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.4); color:#a9dfbf;}
   .alert-orange{background:rgba(243,156,18,.12); border:1px solid rgba(243,156,18,.4); color:#f5cba7;}
+  .alert-blue{background:rgba(79,140,255,.12); border:1px solid rgba(79,140,255,.4); color:#a9c9ff;}
   .suggestion-item{background:var(--card2); border-radius:10px; padding:12px; margin-bottom:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px;}
   .suggestion-info{flex:1;}
   .suggestion-name{font-size:14px; font-weight:600; margin-bottom:2px;}
@@ -134,13 +137,30 @@
   .goal-title{font-weight:700; font-size:14px; margin-bottom:4px;}
   .goal-desc{font-size:12px; color:var(--muted); line-height:1.4;}
   .small-text{font-size:11px; color:var(--muted); margin-top:6px; font-style:italic;}
-  @media(max-width:520px){.row,.row3{grid-template-columns:1fr;}}
+  .obs-item{padding:12px; border-radius:10px; margin-bottom:8px; border-left:4px solid; font-size:13px; line-height:1.5;}
+  .obs-positive{background:rgba(46,204,113,.08); border-color:var(--green); color:#a9dfbf;}
+  .obs-negative{background:rgba(231,76,60,.08); border-color:var(--red); color:#f5b7b1;}
+  .obs-neutral{background:rgba(243,156,18,.08); border-color:var(--orange); color:#f5cba7;}
+  .obs-icon{font-size:18px; margin-right:6px;}
+  .day-card{background:var(--card2); border-radius:12px; padding:14px; margin-bottom:10px; border:1px solid var(--border);}
+  .day-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;}
+  .day-name{font-weight:700; font-size:15px;}
+  .day-date{font-size:12px; color:var(--muted);}
+  .mini-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:8px; margin-top:8px;}
+  .mini-stat{background:rgba(0,0,0,.2); padding:8px; border-radius:8px; text-align:center;}
+  .mini-stat-v{font-size:16px; font-weight:800; color:var(--accent);}
+  .mini-stat-l{font-size:10px; color:var(--muted); text-transform:uppercase; margin-top:2px;}
+  @media(max-width:520px){
+    .row,.row3{grid-template-columns:1fr;}
+    .set-row{grid-template-columns:24px 1fr 1fr 36px 30px; gap:4px;}
+    .set-row input[type=number]{padding:7px 4px; font-size:13px;}
+  }
 
   .welcome{position:fixed; inset:0; background:linear-gradient(160deg,#0f1115 0%,#1a1d24 100%); z-index:1000; overflow-y:auto; padding:24px 16px 60px; display:none;}
   .welcome.show{display:block;}
   .welcome-inner{max-width:520px; margin:0 auto;}
   .welcome-hero{text-align:center; padding:20px 0 24px;}
-  .welcome-hero .icon{font-size:56px; margin-bottom:12px; background:linear-gradient(135deg,var(--accent),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;}
+  .welcome-hero .icon{font-size:56px; margin-bottom:12px;}
   .welcome-hero h1{font-size:26px; margin-bottom:8px; line-height:1.2;}
   .welcome-hero h1 span{background:linear-gradient(135deg,var(--accent),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;}
   .welcome-hero p{color:var(--muted); font-size:14px; line-height:1.5; max-width:420px; margin:0 auto;}
@@ -151,27 +171,35 @@
   .progress-dots{display:flex; gap:6px; justify-content:center; margin-bottom:16px;}
   .progress-dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
   .progress-dots span.on{background:var(--accent); width:24px; border-radius:4px;}
+  .exp-card{background:var(--card2); border-radius:10px; padding:12px; margin-bottom:8px; border:2px solid transparent; cursor:pointer; transition:.2s;}
+  .exp-card:hover{border-color:var(--border);}
+  .exp-card.selected{border-color:var(--accent); background:rgba(79,140,255,.08);}
+  .exp-title{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .exp-desc{font-size:12px; color:var(--muted); line-height:1.4;}
 </style>
 </head>
 <body>
 
+<!-- ============ BIENVENIDA ============ -->
 <div class="welcome" id="welcomeScreen">
   <div class="welcome-inner">
     <div class="welcome-hero">
       <div class="icon">💪</div>
       <h1>Bienvenido a <span>tu Entrenamiento</span></h1>
-      <p>Vamos a configurar tu perfil para personalizar tus objetivos de macros y entrenamiento.</p>
+      <p>Vamos a configurar tu perfil para personalizar tus objetivos.</p>
     </div>
-    <div class="progress-dots" id="welcomeDots"><span class="on"></span><span></span><span></span></div>
+    <div class="progress-dots" id="welcomeDots"><span class="on"></span><span></span><span></span><span></span></div>
+
     <div class="welcome-card" data-step="1">
       <h2>👤 ¿Cómo te llamas?</h2>
-      <p class="hint">Lo usaremos para saludarte en tu panel principal.</p>
+      <p class="hint">Lo usaremos para saludarte.</p>
       <label>Tu nombre o apodo</label>
       <input type="text" id="wcName" placeholder="Ej: Carlos, Cami, Alex..." maxlength="30" autocomplete="off">
     </div>
+
     <div class="welcome-card" data-step="2" style="display:none;">
       <h2>📏 Tus datos físicos</h2>
-      <p class="hint">Con esto calculamos tu metabolismo basal (BMR) y gasto diario (TDEE).</p>
+      <p class="hint">Con esto calculamos tu BMR y TDEE.</p>
       <div class="row3">
         <div><label>Peso (kg)</label><input type="number" id="wcWeight" min="30" max="250" step="0.1" placeholder="70"></div>
         <div><label>Altura (cm)</label><input type="number" id="wcHeight" min="120" max="230" placeholder="175"></div>
@@ -181,18 +209,26 @@
       <select id="wcSex"><option value="M">Masculino</option><option value="F">Femenino</option></select>
       <label>Nivel de actividad diaria</label>
       <select id="wcActivity">
-        <option value="1.2">Sedentario (poco o nada de ejercicio)</option>
-        <option value="1.375">Ligero (1-3 días/semana)</option>
-        <option value="1.55" selected>Moderado (3-5 días/semana)</option>
-        <option value="1.725">Intenso (6-7 días/semana)</option>
-        <option value="1.9">Atleta (2 entrenamientos al día)</option>
+        <option value="1.2">Sedentario</option>
+        <option value="1.375">Ligero (1-3 días/sem)</option>
+        <option value="1.55" selected>Moderado (3-5 días/sem)</option>
+        <option value="1.725">Intenso (6-7 días/sem)</option>
+        <option value="1.9">Atleta (2x día)</option>
       </select>
     </div>
+
     <div class="welcome-card" data-step="3" style="display:none;">
+      <h2>🏋️ ¿Cuál es tu nivel?</h2>
+      <p class="hint">Ajusta las recomendaciones de volumen y progresión.</p>
+      <div id="wcExpPicker"></div>
+    </div>
+
+    <div class="welcome-card" data-step="4" style="display:none;">
       <h2>🎯 ¿Cuál es tu objetivo?</h2>
       <p class="hint">Define cómo calcularemos tus calorías y macros diarios.</p>
       <div id="wcGoalPicker"></div>
     </div>
+
     <div class="welcome-footer">
       <div class="row">
         <button class="btn btn-sec" id="wcBackBtn" style="display:none;">← Atrás</button>
@@ -202,6 +238,7 @@
   </div>
 </div>
 
+<!-- ============ APP ============ -->
 <div class="app">
   <header>
     <h1>💪 Mi Entrenamiento <button class="edit-profile-btn" onclick="openWelcome(true)">✏️ Editar perfil</button></h1>
@@ -211,11 +248,14 @@
       <button data-tab="historial">Historial</button>
       <button data-tab="progreso">Progreso</button>
       <button data-tab="volumen">Volumen</button>
+      <button data-tab="reportes">Reportes</button>
       <button data-tab="nutricion">Nutrición</button>
       <button data-tab="ejercicios">Ejercicios</button>
     </nav>
   </header>
+
   <main>
+    <!-- REGISTRAR -->
     <section id="view-registrar" class="view active">
       <div class="card">
         <h2>➕ Nuevo registro</h2>
@@ -224,12 +264,20 @@
           <div><label>Parte del cuerpo</label><select id="wBodyPart"></select></div>
           <div><label>Ejercicio</label><select id="wExercise"></select></div>
         </div>
-        <label>Series (reps × peso)</label>
+        <label>Series — toca 🔥 si la serie es un dropset</label>
         <div id="setsContainer"></div>
         <button class="add-set" id="addSetBtn">+ Agregar serie</button>
         <button class="btn" id="saveBtn">Guardar entrenamiento</button>
       </div>
+      <div class="card">
+        <h2>ℹ️ ¿Qué es un dropset?</h2>
+        <div class="info-box">
+          Un <b>dropset</b> es cuando haces una serie normal, y sin descansar bajas el peso y sigues haciendo reps hasta el fallo. Se marca con 🔥 y se cuenta como <b>una sola serie</b> para el volumen semanal, pero genera mucho más estímulo. Úsalos con moderación (1-2 por ejercicio, en la última serie).
+        </div>
+      </div>
     </section>
+
+    <!-- HISTORIAL -->
     <section id="view-historial" class="view">
       <div class="card">
         <h2>📅 Historial por fecha</h2>
@@ -240,11 +288,26 @@
       </div>
       <div id="historyContainer"></div>
     </section>
+
+    <!-- PROGRESO -->
     <section id="view-progreso" class="view">
       <div class="card"><h2>📈 Progreso por ejercicio</h2><select id="progressExercise"></select></div>
       <div id="progressContent"></div>
     </section>
+
+    <!-- VOLUMEN -->
     <section id="view-volumen" class="view"><div id="volumeContent"></div></section>
+
+    <!-- REPORTES -->
+    <section id="view-reportes" class="view">
+      <div class="tabs-mini">
+        <button class="active" data-rep="dia">📅 Por día</button>
+        <button data-rep="semana">📊 Por semana</button>
+      </div>
+      <div id="reportesContent"></div>
+    </section>
+
+    <!-- NUTRICIÓN -->
     <section id="view-nutricion" class="view">
       <div class="card">
         <h2>⚙️ Mi perfil</h2>
@@ -265,13 +328,35 @@
             </select>
           </div>
         </div>
+        <label>Nivel de experiencia</label>
+        <select id="nExp">
+          <option value="principiante">Principiante (0-1 año)</option>
+          <option value="intermedio">Intermedio (1-3 años)</option>
+          <option value="avanzado">Avanzado (3+ años)</option>
+        </select>
       </div>
+
       <div class="card">
         <h2>🎯 Objetivo concreto</h2>
         <div id="goalPicker"></div>
         <button class="btn" id="saveProfileBtn">Guardar perfil</button>
       </div>
-      <div class="card"><h2>📊 Objetivos diarios calculados</h2><div id="goalsContent"></div></div>
+
+      <div class="card">
+        <h2>📊 Balance del día</h2>
+        <div id="balanceContent"></div>
+      </div>
+
+      <div class="card">
+        <h2>💬 Observaciones de hoy</h2>
+        <div id="obsContent"></div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Objetivos diarios calculados</h2>
+        <div id="goalsContent"></div>
+      </div>
+
       <div class="card">
         <h2>🍽️ Registrar alimento</h2>
         <div class="tabs-mini">
@@ -320,8 +405,14 @@
           <button class="btn" id="addManualBtn">+ Guardar y añadir al día</button>
         </div>
       </div>
+
       <div id="mealsList"></div>
-      <div class="card"><h2>💡 Sugerencias para alcanzar tus metas</h2><div id="suggestionsContent"></div></div>
+
+      <div class="card">
+        <h2>💡 Sugerencias para alcanzar tus metas</h2>
+        <div id="suggestionsContent"></div>
+      </div>
+
       <div class="card">
         <h2>💊 Suplementos de hoy</h2>
         <div id="supplementsContent"></div>
@@ -331,9 +422,19 @@
         </div>
         <button class="btn btn-sec" id="addSuppBtn">+ Añadir suplemento</button>
       </div>
-      <div class="card"><h2>ℹ️ Recomendaciones personalizadas</h2><div class="info-box" id="infoBox"></div></div>
-      <div class="card"><h2>📚 Mis alimentos personalizados</h2><div id="customFoodsList"></div></div>
+
+      <div class="card">
+        <h2>ℹ️ Recomendaciones personalizadas</h2>
+        <div class="info-box" id="infoBox"></div>
+      </div>
+
+      <div class="card">
+        <h2>📚 Mis alimentos personalizados</h2>
+        <div id="customFoodsList"></div>
+      </div>
     </section>
+
+    <!-- EJERCICIOS -->
     <section id="view-ejercicios" class="view">
       <div class="card">
         <h2>🏋️ Agregar ejercicio</h2>
@@ -365,7 +466,6 @@ const FOOD_DB = [
   {n:'Lomo de cerdo crudo', p:21, c:0, f:5, cat:'proteina', e:'crudo'},
   {n:'Salmón crudo', p:20, c:0, f:13, cat:'proteina', e:'crudo'},
   {n:'Atún en agua (lata, escurrido)', p:29, c:0, f:1, cat:'proteina', e:'listo'},
-  {n:'Atún fresco crudo', p:24, c:0, f:5, cat:'proteina', e:'crudo'},
   {n:'Tilapia cruda', p:26, c:0, f:3, cat:'proteina', e:'crudo'},
   {n:'Merluza cruda', p:17, c:0, f:2, cat:'proteina', e:'crudo'},
   {n:'Sardinas en aceite (escurridas)', p:25, c:0, f:11, cat:'proteina', e:'listo'},
@@ -375,18 +475,13 @@ const FOOD_DB = [
   {n:'Clara de huevo', p:11, c:0.7, f:0.2, cat:'proteina', e:'crudo'},
   {n:'Jamón de pavo en lonchas', p:18, c:1, f:1, cat:'proteina', e:'listo'},
   {n:'Pavo molido crudo', p:27, c:0, f:7, cat:'proteina', e:'crudo'},
-  {n:'Conejo crudo', p:21, c:0, f:8, cat:'proteina', e:'crudo'},
-  {n:'Hígado de res cocido', p:20, c:4, f:4, cat:'proteina', e:'cocido'},
   {n:'Tofu firme', p:8, c:2, f:8, cat:'proteina', e:'listo'},
-  {n:'Soja texturizada seca', p:50, c:30, f:1, cat:'proteina', e:'crudo'},
   {n:'Leche entera', p:3.2, c:4.8, f:3.3, cat:'proteina', e:'listo'},
   {n:'Leche descremada', p:3.4, c:5, f:0.1, cat:'proteina', e:'listo'},
   {n:'Yogur griego natural', p:10, c:4, f:5, cat:'proteina', e:'listo'},
-  {n:'Yogur natural entero', p:3.5, c:5, f:3.5, cat:'proteina', e:'listo'},
   {n:'Queso cottage', p:11, c:3.4, f:4.3, cat:'proteina', e:'listo'},
   {n:'Queso mozzarella', p:22, c:2.2, f:22, cat:'proteina', e:'listo'},
   {n:'Queso fresco', p:14, c:3, f:18, cat:'proteina', e:'listo'},
-  {n:'Requesón', p:13, c:4, f:9, cat:'proteina', e:'listo'},
   {n:'Arroz blanco crudo', p:7, c:80, f:0.6, cat:'carbo', e:'crudo'},
   {n:'Arroz blanco cocido', p:2.7, c:28, f:0.3, cat:'carbo', e:'cocido'},
   {n:'Arroz integral cocido', p:2.6, c:23, f:0.9, cat:'carbo', e:'cocido'},
@@ -394,13 +489,9 @@ const FOOD_DB = [
   {n:'Avena cocida en agua', p:2.5, c:12, f:1.4, cat:'carbo', e:'cocido'},
   {n:'Pan blanco', p:8, c:49, f:3.2, cat:'carbo', e:'listo'},
   {n:'Pan integral', p:13, c:41, f:4.2, cat:'carbo', e:'listo'},
-  {n:'Pasta cruda', p:12, c:75, f:1.5, cat:'carbo', e:'crudo'},
   {n:'Pasta cocida', p:6, c:31, f:0.9, cat:'carbo', e:'cocido'},
   {n:'Pasta integral cocida', p:7, c:29, f:1.2, cat:'carbo', e:'cocido'},
-  {n:'Quinoa cruda', p:14, c:64, f:6, cat:'carbo', e:'crudo'},
   {n:'Quinoa cocida', p:4.4, c:21, f:1.9, cat:'carbo', e:'cocido'},
-  {n:'Cuscús cocido', p:3.8, c:23, f:0.2, cat:'carbo', e:'cocido'},
-  {n:'Papa cruda', p:2, c:17, f:0.1, cat:'carbo', e:'crudo'},
   {n:'Papa cocida', p:2, c:17, f:0.1, cat:'carbo', e:'cocido'},
   {n:'Batata cocida', p:1.6, c:20, f:0.1, cat:'carbo', e:'cocido'},
   {n:'Yuca cocida', p:1.4, c:27, f:0.3, cat:'carbo', e:'cocido'},
@@ -408,15 +499,12 @@ const FOOD_DB = [
   {n:'Manzana', p:0.3, c:14, f:0.2, cat:'carbo', e:'listo'},
   {n:'Naranja', p:0.9, c:12, f:0.1, cat:'carbo', e:'listo'},
   {n:'Fresas', p:0.7, c:8, f:0.3, cat:'carbo', e:'listo'},
-  {n:'Piña', p:0.5, c:13, f:0.1, cat:'carbo', e:'listo'},
   {n:'Mango', p:0.8, c:15, f:0.4, cat:'carbo', e:'listo'},
   {n:'Tortilla de maíz', p:5.7, c:45, f:2.5, cat:'carbo', e:'listo'},
   {n:'Arepa de maíz cocida', p:6, c:45, f:3, cat:'carbo', e:'cocido'},
-  {n:'Lentejas crudas', p:25, c:60, f:1, cat:'carbo', e:'crudo'},
   {n:'Lentejas cocidas', p:9, c:20, f:0.4, cat:'carbo', e:'cocido'},
   {n:'Frijoles negros cocidos', p:8.9, c:24, f:0.5, cat:'carbo', e:'cocido'},
   {n:'Garbanzos cocidos', p:8.9, c:27, f:2.6, cat:'carbo', e:'cocido'},
-  {n:'Habas cocidas', p:8, c:19, f:0.5, cat:'carbo', e:'cocido'},
   {n:'Aguacate', p:2, c:9, f:15, cat:'grasa', e:'listo'},
   {n:'Almendras', p:21, c:22, f:50, cat:'grasa', e:'listo'},
   {n:'Nueces', p:15, c:14, f:65, cat:'grasa', e:'listo'},
@@ -433,25 +521,29 @@ const FOOD_DB = [
   {n:'Tomate', p:0.9, c:3.9, f:0.2, cat:'verdura', e:'listo'},
   {n:'Lechuga', p:1.4, c:2.9, f:0.2, cat:'verdura', e:'listo'},
   {n:'Zanahoria', p:0.9, c:10, f:0.2, cat:'verdura', e:'listo'},
-  {n:'Calabacín', p:1.2, c:3.1, f:0.3, cat:'verdura', e:'cocido'},
-  {n:'Pimiento rojo', p:1, c:6, f:0.3, cat:'verdura', e:'listo'},
-  {n:'Cebolla', p:1.1, c:9, f:0.1, cat:'verdura', e:'listo'},
   {n:'Champiñones', p:3.1, c:3.3, f:0.3, cat:'verdura', e:'listo'},
   {n:'Whey protein (polvo)', p:80, c:8, f:6, cat:'proteina', e:'listo'},
   {n:'Caseína (polvo)', p:75, c:10, f:5, cat:'proteina', e:'listo'},
-  {n:'Proteína vegetal (polvo)', p:70, c:10, f:5, cat:'proteina', e:'listo'},
   {n:'Maltodextrina', p:0, c:95, f:0, cat:'carbo', e:'listo'},
 ];
+
 const GOALS = {
-  maintain:        { name:'Mantenimiento',            factor:1.00, protKg:1.6, fatKg:0.9, desc:'Mantener tu peso y composición corporal actual.' },
-  recomp:          { name:'Recomposición',            factor:0.95, protKg:2.2, fatKg:0.8, desc:'Perder grasa y ganar músculo lentamente. Ideal si eres principiante o con sobrepeso.' },
-  cut_lean:        { name:'Cut limpio (-15%)',        factor:0.85, protKg:2.2, fatKg:0.8, desc:'Perder grasa preservando músculo. Pérdida gradual y sostenible.' },
-  cut_aggressive:  { name:'Cut agresivo (-25%)',      factor:0.75, protKg:2.4, fatKg:0.7, desc:'Pérdida rápida de peso. Riesgo de perder algo de músculo. Solo para periodos cortos.' },
-  bulk_clean:      { name:'Bulk limpio (+10%)',       factor:1.10, protKg:1.9, fatKg:0.9, desc:'Ganancia lenta y limpia. Mínima grasa acumulada. Ideal si te importa la estética.' },
-  bulk_moderate:   { name:'Bulk moderado (+15%)',     factor:1.15, protKg:1.8, fatKg:1.0, desc:'Balance entre ganancia muscular y grasa. Ritmo cómodo de progreso.' },
-  bulk_dirty:      { name:'Bulk sucio (+25%)',        factor:1.25, protKg:1.6, fatKg:1.2, desc:'Ganancia rápida de peso y fuerza. Acumularás más grasa; luego requerirá cut.' }
+  maintain:        { name:'Mantenimiento',        factor:1.00, protKg:1.6, fatKg:0.9, desc:'Mantener tu peso actual.' },
+  recomp:          { name:'Recomposición',        factor:0.95, protKg:2.2, fatKg:0.8, desc:'Perder grasa y ganar músculo lentamente.' },
+  cut_lean:        { name:'Cut limpio (-15%)',    factor:0.85, protKg:2.2, fatKg:0.8, desc:'Perder grasa preservando músculo.' },
+  cut_aggressive:  { name:'Cut agresivo (-25%)',  factor:0.75, protKg:2.4, fatKg:0.7, desc:'Pérdida rápida. Solo periodos cortos.' },
+  bulk_clean:      { name:'Bulk limpio (+10%)',   factor:1.10, protKg:1.9, fatKg:0.9, desc:'Ganancia lenta y limpia.' },
+  bulk_moderate:   { name:'Bulk moderado (+15%)', factor:1.15, protKg:1.8, fatKg:1.0, desc:'Balance ganancia/grasa.' },
+  bulk_dirty:      { name:'Bulk sucio (+25%)',    factor:1.25, protKg:1.6, fatKg:1.2, desc:'Ganancia rápida. Requiere cut después.' }
 };
-const STORAGE_KEY = 'gymTracker_v6';
+
+const EXPERIENCE = {
+  principiante: { name:'Principiante', icon:'🌱', desc:'0-1 año entrenando. Ganarás músculo rápido con poco volumen.', volMin:8,  volMax:14 },
+  intermedio:   { name:'Intermedio',   icon:'🔥', desc:'1-3 años. Necesitas más volumen para progresar.',           volMin:10, volMax:18 },
+  avanzado:     { name:'Avanzado',     icon:'⚡', desc:'3+ años. Alto volumen y técnicas avanzadas.',               volMin:12, volMax:22 }
+};
+
+const STORAGE_KEY = 'gymTracker_v7';
 const defaultState = {
   exercises: {
     'Pecho': ['Press banca plano','Press inclinado','Aperturas con mancuernas','Fondos'],
@@ -462,7 +554,7 @@ const defaultState = {
     'Core': ['Plancha','Crunch','Elevación de piernas']
   },
   workouts: [],
-  profile: { name:'', weight:null, height:null, age:null, sex:'M', goal:'maintain', activity:'1.55' },
+  profile: { name:'', weight:null, height:null, age:null, sex:'M', goal:'maintain', activity:'1.55', experience:'principiante' },
   meals: [],
   customFoods: [],
   supplements: [
@@ -474,6 +566,8 @@ const defaultState = {
   onboarded: false
 };
 let state = JSON.parse(JSON.stringify(defaultState));
+let repMode = 'dia';
+
 function load(){ try{ const saved = localStorage.getItem(STORAGE_KEY); if(saved){ state = {...defaultState, ...JSON.parse(saved)}; } }catch(e){ console.warn(e); } }
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function toast(msg, isError){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.toggle('error', !!isError); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); }
@@ -483,6 +577,7 @@ function round(n, dec=2){ const f=Math.pow(10,dec); return Math.round(n*f)/f; }
 function findFood(name){ const low = name.toLowerCase().trim(); let f = FOOD_DB.find(x=> x.n.toLowerCase() === low); if(f) return f; f = state.customFoods.find(x=> x.n.toLowerCase() === low); return f || null; }
 function allFoods(){ return [...FOOD_DB, ...state.customFoods]; }
 
+/* ============ BIENVENIDA ============ */
 let wcStep = 1;
 function openWelcome(editMode){
   wcStep = 1;
@@ -492,12 +587,22 @@ function openWelcome(editMode){
   document.getElementById('wcAge').value = state.profile.age || '';
   document.getElementById('wcSex').value = state.profile.sex || 'M';
   document.getElementById('wcActivity').value = state.profile.activity || '1.55';
+  renderWcExpPicker();
   renderWcGoalPicker();
   updateWcStep();
   document.getElementById('welcomeScreen').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 function closeWelcome(){ document.getElementById('welcomeScreen').classList.remove('show'); document.body.style.overflow = ''; }
+function renderWcExpPicker(){
+  document.getElementById('wcExpPicker').innerHTML = Object.entries(EXPERIENCE).map(([key, e])=>`
+    <div class="exp-card ${state.profile.experience===key?'selected':''}" onclick="selectWcExp('${key}')">
+      <div class="exp-title">${e.icon} ${e.name}</div>
+      <div class="exp-desc">${e.desc}</div>
+      <div class="exp-desc" style="margin-top:6px; color:var(--accent);">Volumen: ${e.volMin}–${e.volMax} series/semana por grupo</div>
+    </div>`).join('');
+}
+window.selectWcExp = function(key){ state.profile.experience = key; renderWcExpPicker(); };
 function renderWcGoalPicker(){
   document.getElementById('wcGoalPicker').innerHTML = Object.entries(GOALS).map(([key, g])=>`
     <div class="goal-card ${state.profile.goal===key?'selected':''}" onclick="selectWcGoal('${key}')">
@@ -506,15 +611,14 @@ function renderWcGoalPicker(){
       <div class="goal-desc" style="margin-top:6px; color:var(--accent);">
         ${g.factor === 1 ? '= TDEE' : g.factor < 1 ? `= TDEE × ${g.factor} (déficit ${Math.round((1-g.factor)*100)}%)` : `= TDEE × ${g.factor} (superávit ${Math.round((g.factor-1)*100)}%)`}
         · Proteína: ${g.protKg} g/kg · Grasa: ${g.fatKg} g/kg
-      </div>
-    </div>`).join('');
+      </div></div>`).join('');
 }
 window.selectWcGoal = function(key){ state.profile.goal = key; renderWcGoalPicker(); };
 function updateWcStep(){
   document.querySelectorAll('.welcome-card[data-step]').forEach(card=>{ card.style.display = parseInt(card.dataset.step) === wcStep ? 'block' : 'none'; });
   document.querySelectorAll('#welcomeDots span').forEach((dot,i)=>{ dot.classList.toggle('on', i < wcStep); });
   document.getElementById('wcBackBtn').style.display = wcStep > 1 ? 'block' : 'none';
-  document.getElementById('wcNextBtn').textContent = wcStep === 3 ? '¡Empezar! 💪' : 'Continuar →';
+  document.getElementById('wcNextBtn').textContent = wcStep === 4 ? '¡Empezar! 💪' : 'Continuar →';
   if(wcStep === 1){ document.getElementById('wcNextBtn').parentElement.style.gridTemplateColumns = '1fr'; }
   else { document.getElementById('wcNextBtn').parentElement.style.gridTemplateColumns = '1fr 1fr'; }
 }
@@ -535,19 +639,16 @@ document.getElementById('wcNextBtn').onclick = ()=>{
     state.profile.sex = document.getElementById('wcSex').value;
     state.profile.activity = document.getElementById('wcActivity').value;
     save(); wcStep = 3; updateWcStep();
+  } else if(wcStep === 3){
+    wcStep = 4; updateWcStep();
   } else {
-    state.profile.name = document.getElementById('wcName').value.trim() || state.profile.name;
-    state.profile.weight = parseFloat(document.getElementById('wcWeight').value);
-    state.profile.height = parseFloat(document.getElementById('wcHeight').value);
-    state.profile.age = parseFloat(document.getElementById('wcAge').value);
-    state.profile.sex = document.getElementById('wcSex').value;
-    state.profile.activity = document.getElementById('wcActivity').value;
     state.onboarded = true;
     save(); closeWelcome(); renderAll();
     toast('🎉 ¡Todo listo, ' + state.profile.name + '!');
   }
 };
 
+/* ============ NAVEGACIÓN ============ */
 document.querySelectorAll('.tabs button').forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
@@ -557,11 +658,13 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='historial') renderHistorial();
     if(btn.dataset.tab==='progreso') renderProgreso();
     if(btn.dataset.tab==='volumen') renderVolume();
+    if(btn.dataset.tab==='reportes') renderReportes();
     if(btn.dataset.tab==='ejercicios') renderExLibrary();
     if(btn.dataset.tab==='nutricion') renderNutricion();
   };
 });
 
+/* ============ REGISTRAR ============ */
 function fillBodyPartSelects(){
   document.getElementById('wBodyPart').innerHTML = Object.keys(state.exercises).map(bp=>`<option>${bp}</option>`).join('');
   fillExerciseSelect();
@@ -573,19 +676,28 @@ function fillExerciseSelect(){
   document.getElementById('wExercise').innerHTML = list.length ? list.map(e=>`<option>${e}</option>`).join('') : '<option value="">(Sin ejercicios)</option>';
 }
 document.getElementById('wBodyPart').addEventListener('change', fillExerciseSelect);
-function addSetRow(reps='', weight=''){
+
+function addSetRow(reps='', weight='', isDrop=false){
   const row = document.createElement('div');
   row.className = 'set-row';
-  row.innerHTML = `<span class="set-num"></span>
+  row.innerHTML = `
+    <span class="set-num"></span>
     <input type="number" class="set-reps" placeholder="Reps" min="1" value="${reps}">
     <input type="number" class="set-weight" placeholder="Kg" min="0" step="0.5" value="${weight}">
+    <label class="drop-toggle ${isDrop?'on':''}" title="Marcar como dropset">
+      <input type="checkbox" class="set-drop" ${isDrop?'checked':''}>
+      <span>🔥</span>
+    </label>
     <button type="button" class="btn-remove">✕</button>`;
+  const toggle = row.querySelector('.drop-toggle');
+  toggle.onclick = (e)=>{ e.preventDefault(); const cb = row.querySelector('.set-drop'); cb.checked = !cb.checked; toggle.classList.toggle('on', cb.checked); };
   row.querySelector('.btn-remove').onclick = ()=>{ row.remove(); updateSetNumbers(); };
   document.getElementById('setsContainer').appendChild(row);
   updateSetNumbers();
 }
 function updateSetNumbers(){ document.querySelectorAll('#setsContainer .set-row').forEach((row,i)=>{ row.querySelector('.set-num').textContent = i+1; }); }
 document.getElementById('addSetBtn').onclick = ()=> addSetRow();
+
 document.getElementById('saveBtn').onclick = ()=>{
   const date = document.getElementById('wDate').value;
   const bodyPart = document.getElementById('wBodyPart').value;
@@ -595,7 +707,8 @@ document.getElementById('saveBtn').onclick = ()=>{
   document.querySelectorAll('#setsContainer .set-row').forEach(row=>{
     const reps = parseFloat(row.querySelector('.set-reps').value);
     const weight = parseFloat(row.querySelector('.set-weight').value);
-    if(!isNaN(reps) && reps>0) sets.push({reps, weight: isNaN(weight)?0:weight});
+    const isDrop = row.querySelector('.set-drop').checked;
+    if(!isNaN(reps) && reps>0) sets.push({reps, weight: isNaN(weight)?0:weight, isDrop});
   });
   if(!sets.length){ toast('⚠️ Agrega al menos una serie', true); return; }
   state.workouts.push({id:Date.now(), date, bodyPart, exercise, sets});
@@ -606,6 +719,7 @@ document.getElementById('saveBtn').onclick = ()=>{
   renderExerciseOptionsForProgress();
 };
 
+/* ============ HISTORIAL ============ */
 function renderFilters(){
   const years = [...new Set(state.workouts.map(w=>w.date.split('-')[0]))].sort().reverse();
   const months = [...new Set(state.workouts.map(w=>w.date.split('-')[1]))].sort();
@@ -617,6 +731,7 @@ function renderFilters(){
 }
 document.getElementById('filterYear').onchange = renderHistorial;
 document.getElementById('filterMonth').onchange = renderHistorial;
+
 function renderHistorial(){
   renderFilters();
   const fy = document.getElementById('filterYear').value;
@@ -631,14 +746,22 @@ function renderHistorial(){
   container.innerHTML = Object.entries(groups).map(([date, items])=>{
     const totalVol = items.reduce((s,w)=> s + w.sets.reduce((a,x)=> a + x.reps*x.weight, 0), 0);
     const totalSets = items.reduce((s,w)=> s + w.sets.length, 0);
-    return `<div class="card">
-        <div class="day-title"><span>📅 ${fmtDate(date)}</span><span style="color:var(--muted); font-weight:400; font-size:12px;">${totalSets} series · Vol: ${totalVol.toFixed(0)} kg</span></div>
-        ${items.map(w=>`<div class="workout-item">
+    const dropCount = items.reduce((s,w)=> s + w.sets.filter(x=>x.isDrop).length, 0);
+    return `
+      <div class="card">
+        <div class="day-title">
+          <span>📅 ${fmtDate(date)}</span>
+          <span style="color:var(--muted); font-weight:400; font-size:12px;">${totalSets} series${dropCount?` · 🔥${dropCount}`:''} · Vol: ${totalVol.toFixed(0)} kg</span>
+        </div>
+        ${items.map(w=>`
+          <div class="workout-item">
             <div class="workout-head">
               <div><div class="workout-title">${w.exercise}</div><div class="workout-date">${w.bodyPart}</div></div>
               <button class="del-btn" onclick="deleteWorkout(${w.id})">🗑️</button>
             </div>
-            <div class="workout-sets">${w.sets.map((s,i)=>`S${i+1}: <span>${s.reps}</span> reps × <span>${s.weight}</span> kg`).join(' | ')}</div>
+            <div class="workout-sets">
+              ${w.sets.map((s,i)=>`<span class="set-chip ${s.isDrop?'drop':''}">S${i+1}: ${s.reps}×${s.weight}kg${s.isDrop?' 🔥':''}</span>`).join('')}
+            </div>
           </div>`).join('')}
       </div>`;
   }).join('');
@@ -649,6 +772,7 @@ window.deleteWorkout = function(id){
   save(); renderHistorial(); toast('🗑️ Eliminado');
 };
 
+/* ============ PROGRESO ============ */
 function renderExerciseOptionsForProgress(){
   const sel = document.getElementById('progressExercise');
   const cur = sel.value;
@@ -658,6 +782,7 @@ function renderExerciseOptionsForProgress(){
   if(cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
 }
 document.getElementById('progressExercise').addEventListener('change', renderProgreso);
+
 function renderProgreso(){
   renderExerciseOptionsForProgress();
   const val = document.getElementById('progressExercise').value;
@@ -668,17 +793,24 @@ function renderProgreso(){
   if(!sessions.length){ container.innerHTML = `<div class="card"><p class="empty">Aún no hay registros de <b>${exercise}</b>.</p></div>`; return; }
   const byDate = {};
   sessions.forEach(w=>{
-    const d = byDate[w.date] ||= { sets:[], maxWeight:0, volume:0, totalReps:0 };
-    w.sets.forEach(s=>{ d.sets.push(s); d.maxWeight = Math.max(d.maxWeight, s.weight); d.volume += s.reps * s.weight; d.totalReps += s.reps; });
+    const d = byDate[w.date] ||= { sets:[], maxWeight:0, volume:0, totalReps:0, drops:0 };
+    w.sets.forEach(s=>{
+      d.sets.push(s);
+      d.maxWeight = Math.max(d.maxWeight, s.weight);
+      d.volume += s.reps * s.weight;
+      d.totalReps += s.reps;
+      if(s.isDrop) d.drops++;
+    });
   });
   const dates = Object.keys(byDate).sort();
-  const list = dates.map(d => ({ date:d, totalReps:byDate[d].totalReps, maxWeight:byDate[d].maxWeight, volume:byDate[d].volume }));
+  const list = dates.map(d => ({ date:d, totalReps:byDate[d].totalReps, maxWeight:byDate[d].maxWeight, volume:byDate[d].volume, drops:byDate[d].drops }));
   const N = Math.min(4, list.length);
   const firstN = list.slice(0, N), lastN = list.slice(-N);
   const avgDiffReps = (lastN.reduce((s,x)=>s+x.totalReps,0)/lastN.length) - (firstN.reduce((s,x)=>s+x.totalReps,0)/firstN.length);
   const avgDiffWeight = (lastN.reduce((s,x)=>s+x.maxWeight,0)/lastN.length) - (firstN.reduce((s,x)=>s+x.maxWeight,0)/firstN.length);
   const recordReps = Math.max(...list.map(s=> s.totalReps));
   const recordWeight = Math.max(...list.map(s=> s.maxWeight));
+  const totalDrops = list.reduce((s,x)=> s + x.drops, 0);
   let trendReps = 0, trendText = 'Sin datos', trendClass = '';
   if(list.length >= 2){
     trendReps = list[list.length-1].totalReps - list[list.length-2].totalReps;
@@ -686,11 +818,13 @@ function renderProgreso(){
     else if(trendReps < 0){ trendText = `${trendReps} reps`; trendClass = 'negative'; }
     else { trendText = 'Igual'; }
   }
-  container.innerHTML = `<div class="card"><h2>${exercise}</h2>
+  container.innerHTML = `
+    <div class="card"><h2>${exercise}</h2>
       <div class="stats">
         <div class="stat"><div class="stat-value">${list.length}</div><div class="stat-label">Sesiones</div></div>
         <div class="stat"><div class="stat-value" style="color:var(--purple)">${recordReps}</div><div class="stat-label">Récord reps</div></div>
         <div class="stat"><div class="stat-value" style="color:var(--orange)">${recordWeight} kg</div><div class="stat-label">Récord peso</div></div>
+        <div class="stat"><div class="stat-value" style="color:var(--yellow)">${totalDrops}</div><div class="stat-label">🔥 Dropsets</div></div>
         <div class="stat ${avgDiffReps>=0?'positive':'negative'}"><div class="stat-value">${avgDiffReps>=0?'+':''}${avgDiffReps.toFixed(1)}</div><div class="stat-label">Reps progreso</div></div>
         <div class="stat ${avgDiffWeight>=0?'positive':'negative'}"><div class="stat-value">${avgDiffWeight>=0?'+':''}${avgDiffWeight.toFixed(1)} kg</div><div class="stat-label">Peso progreso</div></div>
         <div class="stat ${trendClass}"><div class="stat-value">${trendText}</div><div class="stat-label">Tendencia</div></div>
@@ -706,67 +840,190 @@ function renderChart(data, unit, color){
   return `<div class="chart">${data.map(d=>`<div class="bar-col"><div class="bar-val">${d.value}${unit}</div><div class="bar-area"><div class="bar" style="height:${(d.value/max*100).toFixed(1)}%;background:${grad}"></div></div><div class="bar-lbl">${d.label}</div></div>`).join('')}</div>`;
 }
 
+/* ============ VOLUMEN ============ */
 function calcWeeklyVolume(){
   const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0];
   const recent = state.workouts.filter(w => w.date >= cutoff);
   const vol = {};
   recent.forEach(w=>{
-    if(!vol[w.bodyPart]) vol[w.bodyPart] = { sets:0, sessions:{} };
+    if(!vol[w.bodyPart]) vol[w.bodyPart] = { sets:0, drops:0, sessions:{} };
     vol[w.bodyPart].sets += w.sets.length;
+    vol[w.bodyPart].drops += w.sets.filter(s=>s.isDrop).length;
     vol[w.bodyPart].sessions[w.date] = (vol[w.bodyPart].sessions[w.date]||0) + w.sets.length;
   });
   return vol;
 }
-function getVolumeZone(sets, level){
-  const ranges = { 'principiante':{min:8,max:14}, 'intermedio':{min:10,max:18}, 'avanzado':{min:12,max:22} };
-  const r = ranges[level] || ranges['intermedio'];
+function getVolumeZone(sets, exp){
+  const r = EXPERIENCE[exp] || EXPERIENCE.intermedio;
   if(sets === 0) return { color:'#444', label:'Sin volumen' };
-  if(sets < r.min) return { color:'#f1c40f', label:'Bajo' };
-  if(sets <= r.max) return { color:'#2ecc71', label:'Óptimo' };
+  if(sets < r.volMin) return { color:'#f1c40f', label:'Bajo' };
+  if(sets <= r.volMax) return { color:'#2ecc71', label:'Óptimo' };
   return { color:'#e74c3c', label:'Excesivo' };
 }
 function renderVolume(){
   const container = document.getElementById('volumeContent');
   const vol = calcWeeklyVolume();
   const bodyParts = Object.keys(state.exercises);
-  const totalSessions = new Set(state.workouts.map(w=> w.date)).size;
-  let level = 'principiante';
-  if(totalSessions >= 40) level = 'avanzado';
-  else if(totalSessions >= 12) level = 'intermedio';
+  const exp = state.profile.experience || 'principiante';
+  const expData = EXPERIENCE[exp];
   const alerts = [];
   bodyParts.forEach(bp=>{
     const s = vol[bp]?.sets || 0;
-    const z = getVolumeZone(s, level);
-    if(z.label === 'Excesivo') alerts.push({type:'red', msg:`⚠️ <b>${bp}</b>: ${s} series semanales. Reduce el volumen.`});
-    if(vol[bp]){ Object.entries(vol[bp].sessions).forEach(([date, sets])=>{ if(sets > 10) alerts.push({type:'orange', msg:`⚠️ El ${fmtDate(date)} hiciste <b>${sets} series de ${bp}</b> en una sola sesión.`}); }); }
+    const z = getVolumeZone(s, exp);
+    if(z.label === 'Excesivo') alerts.push({type:'red', msg:`⚠️ <b>${bp}</b>: ${s} series semanales. Excede tu rango de ${exp}.`});
+    if(z.label === 'Bajo' && s > 0) alerts.push({type:'orange', msg:`💡 <b>${bp}</b>: solo ${s} series. Podrías subir a ${expData.volMin} para progresar más.`});
+    if(vol[bp]){ Object.entries(vol[bp].sessions).forEach(([date, sets])=>{ if(sets > 11) alerts.push({type:'orange', msg:`⚠️ El ${fmtDate(date)} hiciste <b>${sets} series de ${bp}</b> en una sesión. Máximo recomendado: 10-11.`}); }); }
   });
-  if(!alerts.length) alerts.push({type:'green', msg:'✅ Tu volumen semanal está dentro de rangos seguros.'});
+  if(!alerts.length) alerts.push({type:'green', msg:`✅ Tu volumen semanal está en rango óptimo para nivel ${exp}.`});
   const totalSetsWeek = Object.values(vol).reduce((s,v)=>s+v.sets, 0);
-  container.innerHTML = `<div class="card"><h2>📊 Resumen semanal</h2>
+  const totalDropsWeek = Object.values(vol).reduce((s,v)=>s+v.drops, 0);
+  container.innerHTML = `
+    <div class="card">
+      <h2>📊 Resumen semanal</h2>
       <div class="stats">
-        <div class="stat"><div class="stat-value">${totalSetsWeek}</div><div class="stat-label">Series totales</div></div>
+        <div class="stat"><div class="stat-value">${totalSetsWeek}</div><div class="stat-label">Series</div></div>
+        <div class="stat"><div class="stat-value" style="color:var(--yellow)">${totalDropsWeek}</div><div class="stat-label">🔥 Dropsets</div></div>
         <div class="stat"><div class="stat-value">${Object.keys(vol).length}</div><div class="stat-label">Grupos</div></div>
-        <div class="stat"><div class="stat-value">${level}</div><div class="stat-label">Nivel</div></div>
-      </div></div>
+        <div class="stat"><div class="stat-value">${expData.icon}</div><div class="stat-label">${expData.name}</div></div>
+      </div>
+      <div class="info-box">
+        <b>Tu nivel: ${expData.icon} ${expData.name}</b><br>
+        ${expData.desc}<br>
+        <b>Rango óptimo:</b> ${expData.volMin}–${expData.volMax} series/semana por grupo.
+      </div>
+    </div>
     <div class="card"><h2>🚨 Alertas</h2>${alerts.map(a=>`<div class="alert alert-${a.type}">${a.msg}</div>`).join('')}</div>
     <div class="card"><h2>💪 Series por grupo</h2>
       ${bodyParts.map(bp=>{
         const sets = vol[bp]?.sets || 0;
-        const z = getVolumeZone(sets, level);
-        return `<div class="vol-row"><div class="vol-top"><b>${bp}</b><span>${sets} series · <span class="badge ${z.label==='Óptimo'?'badge-green':z.label==='Excesivo'?'badge-red':'badge-yellow'}">${z.label}</span></span></div><div class="vol-bar"><div class="vol-fill" style="width:${Math.min(100,sets/25*100)}%;background:${z.color}"></div></div></div>`;
-      }).join('')}</div>
+        const drops = vol[bp]?.drops || 0;
+        const z = getVolumeZone(sets, exp);
+        return `<div class="vol-row"><div class="vol-top"><b>${bp}</b><span>${sets} series${drops?` · 🔥${drops}`:''} · <span class="badge ${z.label==='Óptimo'?'badge-green':z.label==='Excesivo'?'badge-red':'badge-yellow'}">${z.label}</span></span></div><div class="vol-bar"><div class="vol-fill" style="width:${Math.min(100,sets/25*100)}%;background:${z.color}"></div></div></div>`;
+      }).join('')}
+    </div>
     <div class="card"><h2>📚 Reglas anti-sobreentrenamiento</h2>
       <div class="info-box">
-        <b>1.</b> Series por grupo/semana: 10–20 (según nivel).<br>
+        <b>1.</b> Series por grupo/semana: ${expData.volMin}–${expData.volMax} (tu nivel).<br>
         <b>2.</b> Máximo 10–11 series por músculo en una sesión.<br>
         <b>3.</b> Entrena cada grupo 2 veces por semana.<br>
         <b>4.</b> Reps: Fuerza 1–6 · Hipertrofia 6–12 · Resistencia 15–20+.<br>
-        <b>5.</b> Descanso: Fuerza 3–5 min · Hipertrofia 1.5–3 min.<br>
+        <b>5.</b> Dropsets: 1–2 por ejercicio, en la última serie.<br>
         <b>6.</b> Semana de descarga cada 5–6 semanas.<br>
         <b>7.</b> Señales de alarma: fatiga, insomnio, pérdida de fuerza.
-      </div></div>`;
+      </div>
+    </div>`;
 }
 
+/* ============ REPORTES ============ */
+document.querySelectorAll('.tabs-mini button[data-rep]').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.tabs-mini button[data-rep]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    repMode = btn.dataset.rep;
+    renderReportes();
+  };
+});
+
+function renderReportes(){
+  const container = document.getElementById('reportesContent');
+  if(repMode === 'dia') renderReportsByDay(container);
+  else renderReportsByWeek(container);
+}
+
+function renderReportsByDay(container){
+  // Últimos 14 días con actividad
+  const dates = [...new Set(state.workouts.map(w=>w.date))].sort().reverse().slice(0, 14);
+  if(!dates.length){ container.innerHTML = '<div class="card"><p class="empty">Aún no hay entrenamientos registrados.</p></div>'; return; }
+
+  const goals = calcNutrition();
+  const html = dates.map(date=>{
+    const dayWorkouts = state.workouts.filter(w=> w.date === date);
+    const dayMeals = state.meals.filter(m=> m.date === date);
+    const totalSets = dayWorkouts.reduce((s,w)=> s + w.sets.length, 0);
+    const totalDrops = dayWorkouts.reduce((s,w)=> s + w.sets.filter(x=>x.isDrop).length, 0);
+    const totalVol = dayWorkouts.reduce((s,w)=> s + w.sets.reduce((a,x)=> a + x.reps*x.weight, 0), 0);
+    const groups = [...new Set(dayWorkouts.map(w=> w.bodyPart))];
+    const consumed = dayMeals.reduce((a,m)=>({ prot:a.prot+m.prot, carb:a.carb+m.carb, fat:a.fat+m.fat }), {prot:0,carb:0,fat:0});
+    const consumedCal = consumed.prot*4 + consumed.carb*4 + consumed.fat*9;
+    const adherence = goals ? Math.min(100, (consumedCal/goals.calories)*100) : 0;
+
+    return `
+      <div class="day-card">
+        <div class="day-head">
+          <div><div class="day-name">📅 ${fmtDate(date)}</div><div class="day-date">${groups.join(' · ') || 'Sin entrenamiento'}</div></div>
+          <span class="badge ${adherence >= 90 ? 'badge-green' : adherence >= 70 ? 'badge-yellow' : 'badge-red'}">${adherence.toFixed(0)}% meta</span>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-v">${totalSets}</div><div class="mini-stat-l">Series</div></div>
+          <div class="mini-stat"><div class="mini-stat-v" style="color:var(--yellow)">${totalDrops}</div><div class="mini-stat-l">🔥 Drop</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${totalVol.toFixed(0)}</div><div class="mini-stat-l">Volumen</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${consumed.prot.toFixed(0)}g</div><div class="mini-stat-l">Proteína</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${Math.round(consumedCal)}</div><div class="mini-stat-l">kcal</div></div>
+        </div>
+      </div>`;
+  }).join('');
+  container.innerHTML = html;
+}
+
+function renderReportsByWeek(container){
+  // Agrupar por semana ISO
+  const weeks = {};
+  state.workouts.forEach(w=>{
+    const d = new Date(w.date + 'T12:00:00');
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d - startOfYear) / (24*60*60*1000));
+    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    const key = `${d.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+    (weeks[key] ||= { workouts:[], meals:[] }).workouts.push(w);
+  });
+  state.meals.forEach(m=>{
+    const d = new Date(m.date + 'T12:00:00');
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d - startOfYear) / (24*60*60*1000));
+    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    const key = `${d.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+    (weeks[key] ||= { workouts:[], meals:[] }).meals.push(m);
+  });
+
+  const keys = Object.keys(weeks).sort().reverse();
+  if(!keys.length){ container.innerHTML = '<div class="card"><p class="empty">Aún no hay datos semanales.</p></div>'; return; }
+
+  const goals = calcNutrition();
+  const html = keys.map(key=>{
+    const wk = weeks[key];
+    const totalSets = wk.workouts.reduce((s,w)=> s + w.sets.length, 0);
+    const totalDrops = wk.workouts.reduce((s,w)=> s + w.sets.filter(x=>x.isDrop).length, 0);
+    const totalVol = wk.workouts.reduce((s,w)=> s + w.sets.reduce((a,x)=> a + x.reps*x.weight, 0), 0);
+    const uniqueDays = new Set(wk.workouts.map(w=>w.date)).size;
+    const groups = {};
+    wk.workouts.forEach(w=>{ groups[w.bodyPart] = (groups[w.bodyPart]||0) + w.sets.length; });
+    const avgProt = wk.meals.length ? wk.meals.reduce((s,m)=> s+m.prot, 0) / uniqueDays : 0;
+    const avgCal = wk.meals.length ? wk.meals.reduce((s,m)=> s+m.prot*4+m.carb*4+m.fat*9, 0) / uniqueDays : 0;
+    const protAdh = goals ? Math.min(100, (avgProt/goals.protein)*100) : 0;
+    const calAdh = goals ? Math.min(100, (avgCal/goals.calories)*100) : 0;
+
+    return `
+      <div class="day-card">
+        <div class="day-head">
+          <div><div class="day-name">📊 Semana ${key}</div><div class="day-date">${uniqueDays} días entrenados</div></div>
+          <span class="badge ${protAdh >= 90 ? 'badge-green' : protAdh >= 70 ? 'badge-yellow' : 'badge-red'}">P: ${protAdh.toFixed(0)}%</span>
+        </div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="mini-stat-v">${totalSets}</div><div class="mini-stat-l">Series</div></div>
+          <div class="mini-stat"><div class="mini-stat-v" style="color:var(--yellow)">${totalDrops}</div><div class="mini-stat-l">🔥 Drop</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${totalVol.toFixed(0)}</div><div class="mini-stat-l">Volumen</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${avgProt.toFixed(0)}g</div><div class="mini-stat-l">Prot/día</div></div>
+          <div class="mini-stat"><div class="mini-stat-v">${Math.round(avgCal)}</div><div class="mini-stat-l">kcal/día</div></div>
+        </div>
+        <div style="margin-top:10px; font-size:12px; color:var(--muted);">
+          <b style="color:var(--text);">Reparto por grupo:</b> ${Object.entries(groups).map(([g,s])=>`${g}: ${s}`).join(' · ')}
+        </div>
+      </div>`;
+  }).join('');
+  container.innerHTML = html;
+}
+
+/* ============ NUTRICIÓN ============ */
 function calcNutrition(){
   const p = state.profile;
   if(!p.weight || !p.height || !p.age) return null;
@@ -787,11 +1044,12 @@ function renderGoalPicker(){
       <div class="goal-title">${g.name}</div><div class="goal-desc">${g.desc}</div>
       <div class="goal-desc" style="margin-top:6px; color:var(--accent);">
         ${g.factor === 1 ? '= TDEE' : g.factor < 1 ? `= TDEE × ${g.factor} (déficit ${Math.round((1-g.factor)*100)}%)` : `= TDEE × ${g.factor} (superávit ${Math.round((g.factor-1)*100)}%)`}
-        · Proteína: ${g.protKg} g/kg · Grasa: ${g.fatKg} g/kg
       </div></div>`).join('');
 }
-window.selectGoal = function(key){ state.profile.goal = key; save(); renderGoalPicker(); toast('🎯 Objetivo: ' + GOALS[key].name); };
+window.selectGoal = function(key){ state.profile.goal = key; save(); renderGoalPicker(); renderAll(); toast('🎯 Objetivo: ' + GOALS[key].name); };
+
 function fillFoodDatalist(){ document.getElementById('foodList').innerHTML = allFoods().map(f=>`<option value="${f.n}">`).join(''); }
+
 function renderNutricion(){
   const p = state.profile;
   document.getElementById('nWeight').value = p.weight || '';
@@ -799,32 +1057,48 @@ function renderNutricion(){
   document.getElementById('nAge').value = p.age || '';
   document.getElementById('nSex').value = p.sex || 'M';
   document.getElementById('nActivity').value = p.activity || '1.55';
+  document.getElementById('nExp').value = p.experience || 'principiante';
   renderGoalPicker();
-  renderGoals(); renderMeals(); renderSuggestions(); renderSupplements(); renderInfo(); renderCustomFoods(); fillFoodDatalist();
+  renderGoals(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderSupplements(); renderInfo(); renderCustomFoods(); fillFoodDatalist();
 }
+
 document.getElementById('saveProfileBtn').onclick = ()=>{
   state.profile.weight = parseFloat(document.getElementById('nWeight').value) || null;
   state.profile.height = parseFloat(document.getElementById('nHeight').value) || null;
   state.profile.age = parseFloat(document.getElementById('nAge').value) || null;
   state.profile.sex = document.getElementById('nSex').value;
   state.profile.activity = document.getElementById('nActivity').value;
-  save(); renderGoals(); renderSuggestions(); renderInfo();
+  state.profile.experience = document.getElementById('nExp').value;
+  save(); renderAll();
   toast('✅ Perfil guardado');
 };
+
 function getTodayMeals(){ return state.meals.filter(m=> m.date === todayISO()); }
-function renderGoals(){
+
+/* ============ BALANCE ============ */
+function renderBalance(){
   const goals = calcNutrition();
-  const container = document.getElementById('goalsContent');
-  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil arriba.</p>'; return; }
+  const container = document.getElementById('balanceContent');
+  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil.</p>'; return; }
   const todayMeals = getTodayMeals();
   const consumed = todayMeals.reduce((acc,m)=>({ prot: acc.prot + (m.prot||0), carb: acc.carb + (m.carb||0), fat: acc.fat + (m.fat||0) }), {prot:0, carb:0, fat:0});
   const consumedCal = consumed.prot*4 + consumed.carb*4 + consumed.fat*9;
-  container.innerHTML = `<div class="info-box" style="margin-top:0; margin-bottom:14px;"><b>Objetivo activo:</b> ${goals.goalName}<br><span style="font-size:12px;">${goals.goalDesc}</span></div>
+  const calPct = (consumedCal/goals.calories)*100;
+  const protPct = (consumed.prot/goals.protein)*100;
+  const carbPct = (consumed.carb/goals.carbs)*100;
+  const fatPct = (consumed.fat/goals.fat)*100;
+  const overallScore = Math.min(100, (calPct*0.3 + protPct*0.4 + carbPct*0.15 + fatPct*0.15));
+
+  container.innerHTML = `
+    <div style="text-align:center; padding:14px 0;">
+      <div style="font-size:48px; font-weight:900; color:${overallScore >= 85 ? 'var(--green)' : overallScore >= 65 ? 'var(--yellow)' : 'var(--red)'}">${overallScore.toFixed(0)}%</div>
+      <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Cumplimiento del día</div>
+    </div>
     ${macroRow('Calorías', consumedCal, goals.calories, 'kcal', 'cal')}
     ${macroRow('Proteína', consumed.prot, goals.protein, 'g', 'prot')}
     ${macroRow('Carbohidratos', consumed.carb, goals.carbs, 'g', 'carb')}
     ${macroRow('Grasas', consumed.fat, goals.fat, 'g', 'fat')}
-    <div class="info-box"><b>BMR (Mifflin-St Jeor):</b> ${goals.bmr} kcal<br><b>TDEE (× actividad):</b> ${goals.tdee} kcal<br><b>Objetivo:</b> ${goals.tdee} × ${goals.factor} = <b>${goals.calories} kcal</b></div>`;
+  `;
 }
 function macroRow(name, consumed, target, unit, type){
   const pct = target > 0 ? Math.min(100, (consumed/target)*100) : 0;
@@ -833,6 +1107,83 @@ function macroRow(name, consumed, target, unit, type){
   const badgeText = remaining > 0 ? `Faltan ${remaining.toFixed(0)}${unit}` : `Excedido ${Math.abs(remaining).toFixed(0)}${unit}`;
   return `<div class="macro-row"><div class="macro-row-top"><b>${name}</b><span>${consumed.toFixed(1)} / ${target} ${unit} <span class="badge ${badgeClass}">${badgeText}</span></span></div><div class="macro-bar"><div class="macro-fill ${type}" style="width:${pct}%"></div></div></div>`;
 }
+
+/* ============ OBSERVACIONES ============ */
+function renderObservations(){
+  const goals = calcNutrition();
+  const container = document.getElementById('obsContent');
+  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil.</p>'; return; }
+
+  const todayMeals = getTodayMeals();
+  const consumed = todayMeals.reduce((acc,m)=>({ prot: acc.prot + (m.prot||0), carb: acc.carb + (m.carb||0), fat: acc.fat + (m.fat||0) }), {prot:0, carb:0, fat:0});
+  const consumedCal = consumed.prot*4 + consumed.carb*4 + consumed.fat*9;
+  const observations = [];
+
+  const calPct = (consumedCal/goals.calories)*100;
+  const protPct = (consumed.prot/goals.protein)*100;
+  const carbPct = (consumed.carb/goals.carbs)*100;
+  const fatPct = (consumed.fat/goals.fat)*100;
+
+  // Proteína
+  if(protPct >= 95 && protPct <= 110) observations.push({t:'positive', m:`¡Excelente! Cumpliste tu meta de proteína (${consumed.prot.toFixed(0)}g de ${goals.protein}g). Esto maximiza la síntesis muscular.`});
+  else if(protPct >= 80) observations.push({t:'neutral', m:`Proteína casi al objetivo (${consumed.prot.toFixed(0)}g de ${goals.protein}g). Te faltan ${(goals.protein - consumed.prot).toFixed(0)}g. Añade una fuente proteica más.`});
+  else if(protPct > 0) observations.push({t:'negative', m:`Proteína baja hoy (${consumed.prot.toFixed(0)}g de ${goals.protein}g). Te faltan ${(goals.protein - consumed.prot).toFixed(0)}g. Sin suficiente proteína, ganarás menos músculo.`});
+
+  // Calorías
+  if(calPct >= 95 && calPct <= 105) observations.push({t:'positive', m:`Calorías en el rango ideal (${Math.round(consumedCal)} de ${goals.calories} kcal). Vas perfecto para tu objetivo de ${goals.goalName.toLowerCase()}.`});
+  else if(calPct < 85 && consumedCal > 0) observations.push({t:'negative', m:`Estás por debajo de tus calorías (${Math.round(consumedCal)} de ${goals.calories}). Si esto pasa muchos días, no progresarás al ritmo esperado.`});
+  else if(calPct > 115) observations.push({t:'negative', m:`Te pasaste de calorías hoy (${Math.round(consumedCal)} de ${goals.calories}). El superávit excesivo se acumula como grasa.`});
+
+  // Carbos
+  if(carbPct >= 90) observations.push({t:'positive', m:`Carbohidratos bien cubiertos (${consumed.carb.toFixed(0)}g de ${goals.carbs}g). Tendrás energía para entrenar fuerte.`});
+  else if(carbPct < 60 && carbPct > 0) observations.push({t:'neutral', m:`Carbos bajos (${consumed.carb.toFixed(0)}g de ${goals.carbs}g). Si vas a entrenar, considera añadir arroz, avena o fruta.`});
+
+  // Grasas
+  if(fatPct > 130) observations.push({t:'negative', m:`Grasas por encima del objetivo (${consumed.fat.toFixed(0)}g de ${goals.fat}g). Reduce aceites, frutos secos o frituras.`});
+  else if(fatPct < 50 && fatPct > 0) observations.push({t:'neutral', m:`Grasas muy bajas (${consumed.fat.toFixed(0)}g de ${goals.fat}g). Las grasas son clave para tus hormonas. Añade aguacate, aceite de oliva o frutos secos.`});
+
+  // Entrenamiento último 7 días
+  const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0];
+  const lastWeek = state.workouts.filter(w=> w.date >= cutoff);
+  const daysTrained = new Set(lastWeek.map(w=> w.date)).size;
+  if(daysTrained >= 5) observations.push({t:'positive', m:`¡Increíble! Entrenaste ${daysTrained} días esta semana. Frecuencia alta, asegúrate de dormir bien.`});
+  else if(daysTrained === 4) observations.push({t:'positive', m:`Entrenaste ${daysTrained} días esta semana. Excelente frecuencia para hipertrofia.`});
+  else if(daysTrained === 3) observations.push({t:'neutral', m:`Entrenaste ${daysTrained} días esta semana. Es lo mínimo efectivo; podrías añadir uno más.`});
+  else if(daysTrained <= 2 && daysTrained > 0) observations.push({t:'negative', m:`Solo ${daysTrained} día(s) esta semana. Para progresar necesitas mínimo 3 días.`});
+  else if(daysTrained === 0) observations.push({t:'negative', m:`No has entrenado esta semana. Retoma el hábito: la consistencia es lo más importante.`});
+
+  // Suplementos
+  const today = todayISO();
+  const taken = state.supplementLog[today] || [];
+  const creatineSupp = state.supplements.find(s=> s.name.toLowerCase().includes('creatina'));
+  if(creatineSupp){
+    if(taken.includes(creatineSupp.id)) observations.push({t:'positive', m:`Tomaste creatina hoy ✅. Mantén los 5g diarios incluso en días de descanso.`});
+    else observations.push({t:'neutral', m:`No has marcado la creatina hoy. Recuerda: 5g diarios, todos los días.`});
+  }
+
+  if(!observations.length) observations.push({t:'neutral', m:`Registra comidas y entrenamientos para recibir observaciones personalizadas.`});
+
+  container.innerHTML = observations.map(o=>`<div class="obs-item obs-${o.t}">${o.m}</div>`).join('');
+}
+
+function renderGoals(){
+  const goals = calcNutrition();
+  const container = document.getElementById('goalsContent');
+  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil.</p>'; return; }
+  container.innerHTML = `
+    <div class="info-box" style="margin-top:0; margin-bottom:14px;">
+      <b>Objetivo:</b> ${goals.goalName}<br>
+      <span style="font-size:12px;">${goals.goalDesc}</span>
+    </div>
+    <div class="info-box">
+      <b>BMR (Mifflin-St Jeor):</b> ${goals.bmr} kcal<br>
+      <b>TDEE (× ${state.profile.activity}):</b> ${goals.tdee} kcal<br>
+      <b>Meta:</b> ${goals.tdee} × ${goals.factor} = <b>${goals.calories} kcal</b><br>
+      <b>Proteína:</b> ${goals.protein}g · <b>Carbos:</b> ${goals.carbs}g · <b>Grasas:</b> ${goals.fat}g
+    </div>`;
+}
+
+/* ============ ALIMENTOS ============ */
 function updateFoodPreview(){
   const name = document.getElementById('foodInput').value.trim();
   const grams = parseFloat(document.getElementById('foodGrams').value);
@@ -845,8 +1196,7 @@ function updateFoodPreview(){
   const cal = round(p*4 + c*4 + f*9, 1);
   preview.style.display = 'block';
   preview.innerHTML = `<div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:6px;">${food.n} · ${grams} g ${food.e ? `<span class="badge badge-blue" style="font-size:10px;">${food.e}</span>` : ''}</div>
-    <div class="calc-detail">Proteína: <b>${p} g</b><br>Carbos: <b>${c} g</b><br>Grasas: <b>${f} g</b><br>Calorías: <b>${cal} kcal</b></div>
-    <div class="small-text">Cálculo: (${grams} × ${food.p}) ÷ 100 = ${p}g proteína.</div>`;
+    <div class="calc-detail">Proteína: <b>${p} g</b><br>Carbos: <b>${c} g</b><br>Grasas: <b>${f} g</b><br>Calorías: <b>${cal} kcal</b></div>`;
 }
 document.getElementById('foodInput').addEventListener('input', updateFoodPreview);
 document.getElementById('foodGrams').addEventListener('input', updateFoodPreview);
@@ -866,12 +1216,12 @@ document.getElementById('addFoodBtn').onclick = ()=>{
   document.getElementById('foodInput').value = '';
   document.getElementById('foodGrams').value = '';
   document.getElementById('foodPreview').style.display = 'none';
-  renderGoals(); renderMeals(); renderSuggestions();
-  toast('✅ Añadido: ' + prot + 'g P · ' + carb + 'g C · ' + fat + 'g G');
+  renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
+  toast('✅ Añadido');
 };
-document.querySelectorAll('.tabs-mini button').forEach(btn=>{
+document.querySelectorAll('.tabs-mini button[data-mode]').forEach(btn=>{
   btn.onclick = ()=>{
-    document.querySelectorAll('.tabs-mini button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabs-mini button[data-mode]').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('modeDB').style.display = btn.dataset.mode === 'db' ? 'block' : 'none';
     document.getElementById('modeManual').style.display = btn.dataset.mode === 'manual' ? 'block' : 'none';
@@ -898,10 +1248,8 @@ function updateManualPreview(){
   const f = round(fat100 * grams / 100, 2);
   const cal = round(p*4 + c*4 + f*9, 1);
   preview.style.display = 'block';
-  preview.innerHTML = `<div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px;">Vista previa del cálculo</div>
-    <div class="calc-detail"><b>Tu porción de ${grams} g aporta:</b><br>Proteína: <b>${p} g</b><br>Carbos: <b>${c} g</b><br>Grasas: <b>${f} g</b><br>Calorías: <b>${cal} kcal</b></div>
-    <div class="small-text">Normalizado a 100g: ${round(prot100,2)}g P · ${round(carb100,2)}g C · ${round(fat100,2)}g G. ${base === 'porcion' ? `(Calculado desde una porción de ${refGrams}g).` : ''}</div>
-    <div class="small-text" style="color:var(--orange);">Nota: El cálculo de calorías puede variar ±5% respecto a la etiqueta debido al redondeo del fabricante y al aporte de la fibra.</div>`;
+  preview.innerHTML = `<div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px;">Vista previa</div>
+    <div class="calc-detail"><b>Tu porción de ${grams}g aporta:</b><br>Proteína: <b>${p}g</b><br>Carbos: <b>${c}g</b><br>Grasas: <b>${f}g</b><br>Calorías: <b>${cal}kcal</b></div>`;
 }
 document.getElementById('addManualBtn').onclick = ()=>{
   const name = document.getElementById('mName').value.trim();
@@ -911,12 +1259,12 @@ document.getElementById('addManualBtn').onclick = ()=>{
   const fatInput = parseFloat(document.getElementById('mFat').value);
   const grams = parseFloat(document.getElementById('mGrams').value);
   const time = document.getElementById('mealTimeManual').value;
-  if(!name){ toast('⚠️ Ponle nombre al producto', true); return; }
+  if(!name){ toast('⚠️ Ponle nombre', true); return; }
   if(isNaN(protInput) || isNaN(carbInput) || isNaN(fatInput)){ toast('⚠️ Ingresa los macros', true); return; }
   if(!grams || grams <= 0){ toast('⚠️ Ingresa los gramos', true); return; }
   let prot100, carb100, fat100;
   if(base === '100'){ prot100 = protInput; carb100 = carbInput; fat100 = fatInput; }
-  else { const portion = parseFloat(document.getElementById('mPortionSize').value) || 0; if(portion <= 0){ toast('⚠️ Ingresa el tamaño de la porción', true); return; } prot100 = protInput * 100 / portion; carb100 = carbInput * 100 / portion; fat100 = fatInput * 100 / portion; }
+  else { const portion = parseFloat(document.getElementById('mPortionSize').value) || 0; if(portion <= 0){ toast('⚠️ Ingresa el tamaño de porción', true); return; } prot100 = protInput * 100 / portion; carb100 = carbInput * 100 / portion; fat100 = fatInput * 100 / portion; }
   const existing = state.customFoods.find(f=> f.n.toLowerCase() === name.toLowerCase());
   const customFood = { n: name, p: round(prot100,2), c: round(carb100,2), f: round(fat100,2), cat: 'personalizado', e: 'listo' };
   if(existing){ Object.assign(existing, customFood); } else { state.customFoods.push(customFood); }
@@ -927,8 +1275,8 @@ document.getElementById('addManualBtn').onclick = ()=>{
   save();
   ['mName','mProt','mCarb','mFat','mPortionSize','mGrams'].forEach(id=> document.getElementById(id).value = '');
   document.getElementById('manualPreview').style.display = 'none';
-  renderGoals(); renderMeals(); renderSuggestions(); renderCustomFoods(); fillFoodDatalist();
-  toast('✅ Guardado y añadido: ' + p + 'g P · ' + c + 'g C · ' + f + 'g G');
+  renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderCustomFoods(); fillFoodDatalist(); renderGoals();
+  toast('✅ Guardado');
 };
 function renderMeals(){
   const container = document.getElementById('mealsList');
@@ -943,23 +1291,25 @@ function renderMeals(){
         const tTot = items.reduce((a,m)=>({prot:a.prot+m.prot, carb:a.carb+m.carb, fat:a.fat+m.fat}), {prot:0,carb:0,fat:0});
         const tCal = tTot.prot*4 + tTot.carb*4 + tTot.fat*9;
         return `<div style="margin-bottom:14px;"><div style="font-size:12px; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;">${time} · ${Math.round(tCal)} kcal</div>
-            ${items.map(m=>`<div class="food-item"><div class="food-item-info"><div class="food-item-name">${m.name} <span class="food-item-grams">· ${m.grams} g</span></div><div class="food-item-macros">P: <span>${m.prot.toFixed(2)}g</span> · C: <span>${m.carb.toFixed(2)}g</span> · G: <span>${m.fat.toFixed(2)}g</span> · <span>${round(m.prot*4+m.carb*4+m.fat*9, 1)} kcal</span></div></div><button class="del-btn" onclick="deleteMeal(${m.id})">🗑️</button></div>`).join('')}
+            ${items.map(m=>`<div class="food-item"><div class="food-item-info"><div class="food-item-name">${m.name} <span class="food-item-grams">· ${m.grams}g</span></div><div class="food-item-macros">P: <span>${m.prot.toFixed(2)}g</span> · C: <span>${m.carb.toFixed(2)}g</span> · G: <span>${m.fat.toFixed(2)}g</span></div></div><button class="del-btn" onclick="deleteMeal(${m.id})">🗑️</button></div>`).join('')}
           </div>`;
       }).join('')}
-      <div class="info-box"><b>Total del día:</b> ${round(totalCal, 1)} kcal<br>Proteína: <b>${totals.prot.toFixed(2)}g</b> · Carbos: <b>${totals.carb.toFixed(2)}g</b> · Grasas: <b>${totals.fat.toFixed(2)}g</b></div>
+      <div class="info-box"><b>Total:</b> ${round(totalCal, 1)} kcal · P: <b>${totals.prot.toFixed(2)}g</b> · C: <b>${totals.carb.toFixed(2)}g</b> · G: <b>${totals.fat.toFixed(2)}g</b></div>
     </div>`;
 }
-window.deleteMeal = function(id){ state.meals = state.meals.filter(m=> m.id !== id); save(); renderMeals(); renderGoals(); renderSuggestions(); toast('🗑️ Eliminado'); };
+window.deleteMeal = function(id){ state.meals = state.meals.filter(m=> m.id !== id); save(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals(); toast('🗑️ Eliminado'); };
 function renderCustomFoods(){
   const container = document.getElementById('customFoodsList');
   if(!state.customFoods.length){ container.innerHTML = '<p class="empty">Aún no has guardado alimentos personalizados.</p>'; return; }
-  container.innerHTML = state.customFoods.map((f,i)=>`<div class="food-item"><div class="food-item-info"><div class="food-item-name">${f.n}</div><div class="food-item-macros">Por 100 g: P <span>${f.p}g</span> · C <span>${f.c}g</span> · G <span>${f.f}g</span></div></div><button class="del-btn" onclick="removeCustomFood(${i})">🗑️</button></div>`).join('');
+  container.innerHTML = state.customFoods.map((f,i)=>`<div class="food-item"><div class="food-item-info"><div class="food-item-name">${f.n}</div><div class="food-item-macros">Por 100g: P <span>${f.p}g</span> · C <span>${f.c}g</span> · G <span>${f.f}g</span></div></div><button class="del-btn" onclick="removeCustomFood(${i})">🗑️</button></div>`).join('');
 }
-window.removeCustomFood = function(i){ if(!confirm('¿Eliminar este alimento personalizado?')) return; state.customFoods.splice(i,1); save(); renderCustomFoods(); fillFoodDatalist(); toast('🗑️ Eliminado'); };
+window.removeCustomFood = function(i){ if(!confirm('¿Eliminar?')) return; state.customFoods.splice(i,1); save(); renderCustomFoods(); fillFoodDatalist(); toast('🗑️ Eliminado'); };
+
+/* ============ SUGERENCIAS ============ */
 function renderSuggestions(){
   const goals = calcNutrition();
   const container = document.getElementById('suggestionsContent');
-  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil para ver sugerencias.</p>'; return; }
+  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil.</p>'; return; }
   const todayMeals = getTodayMeals();
   const consumed = todayMeals.reduce((acc,m)=>({ prot: acc.prot + (m.prot||0), carb: acc.carb + (m.carb||0), fat: acc.fat + (m.fat||0) }), {prot:0, carb:0, fat:0});
   const remainingProt = goals.protein - consumed.prot;
@@ -991,22 +1341,23 @@ function renderSuggestions(){
       const gramsShown = Math.min(gramsNeeded, 400);
       const actual = round(nutrientPer100 * gramsShown / 100, 1);
       const cal = Math.round(food.p*gramsShown/100*4 + food.c*gramsShown/100*4 + food.f*gramsShown/100*9);
-      html += `<div class="suggestion-item"><div class="suggestion-info"><div class="suggestion-name">${food.n}</div><div class="suggestion-detail"><b>${gramsShown} g</b> → <span>${actual}${d.unit} ${d.label.toLowerCase()}</span> · ${cal} kcal</div></div><button class="suggestion-btn" onclick="quickAddFood('${food.n.replace(/'/g,"\\'")}', ${gramsShown})">+ Añadir</button></div>`;
+      html += `<div class="suggestion-item"><div class="suggestion-info"><div class="suggestion-name">${food.n}</div><div class="suggestion-detail"><b>${gramsShown}g</b> → <span>${actual}${d.unit} ${d.label.toLowerCase()}</span> · ${cal} kcal</div></div><button class="suggestion-btn" onclick="quickAddFood('${food.n.replace(/'/g,"\\'")}', ${gramsShown})">+ Añadir</button></div>`;
     });
     html += `</div>`;
   });
   container.innerHTML = html;
 }
 window.quickAddFood = function(foodName, grams){
-  const food = findFood(foodName);
-  if(!food) return;
+  const food = findFood(foodName); if(!food) return;
   const prot = round(food.p * grams / 100, 2);
   const carb = round(food.c * grams / 100, 2);
   const fat = round(food.f * grams / 100, 2);
   state.meals.push({ id: Date.now(), date: todayISO(), name: food.n, grams, prot, carb, fat, time: 'Snack' });
-  save(); renderGoals(); renderMeals(); renderSuggestions();
-  toast(`✅ ${grams}g de ${food.n} añadidos`);
+  save(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
+  toast(`✅ ${grams}g de ${food.n}`);
 };
+
+/* ============ SUPLEMENTOS ============ */
 function renderSupplements(){
   const container = document.getElementById('supplementsContent');
   const today = todayISO();
@@ -1022,13 +1373,13 @@ window.toggleSupp = function(id){
   if(!state.supplementLog[today]) state.supplementLog[today] = [];
   const idx = state.supplementLog[today].indexOf(id);
   if(idx >= 0) state.supplementLog[today].splice(idx,1); else state.supplementLog[today].push(id);
-  save(); renderSupplements();
+  save(); renderSupplements(); renderObservations();
 };
 window.deleteSupp = function(id){
-  if(!confirm('¿Eliminar este suplemento?')) return;
+  if(!confirm('¿Eliminar?')) return;
   state.supplements = state.supplements.filter(s=> s.id !== id);
   Object.keys(state.supplementLog).forEach(d=>{ state.supplementLog[d] = state.supplementLog[d].filter(x=> x !== id); });
-  save(); renderSupplements();
+  save(); renderSupplements(); toast('🗑️ Eliminado');
 };
 document.getElementById('addSuppBtn').onclick = ()=>{
   const name = document.getElementById('newSuppName').value.trim();
@@ -1036,23 +1387,26 @@ document.getElementById('addSuppBtn').onclick = ()=>{
   if(!name){ toast('⚠️ Escribe un nombre', true); return; }
   state.supplements.push({id: Date.now(), name, dose});
   save(); document.getElementById('newSuppName').value = ''; document.getElementById('newSuppDose').value = '';
-  renderSupplements(); toast('✅ Suplemento añadido');
+  renderSupplements(); toast('✅ Añadido');
 };
+
 function renderInfo(){
   const goals = calcNutrition();
   const box = document.getElementById('infoBox');
-  if(!goals){ box.innerHTML = 'Completa tu perfil para ver recomendaciones.'; return; }
+  if(!goals){ box.innerHTML = 'Completa tu perfil.'; return; }
   const w = state.profile.weight;
   const hasCreatine = state.supplements.some(s=> s.name.toLowerCase().includes('creatina'));
   const hasWhey = state.supplements.some(s=> s.name.toLowerCase().includes('whey') || s.name.toLowerCase().includes('proteína'));
   box.innerHTML = `<b>Objetivo:</b> ${goals.goalName}<br><span style="font-size:12px;">${goals.goalDesc}</span><br><br>
-    <b>Proteína:</b> ${goals.protein}g/día (${goals.protKg} g/kg). Reparte en 4 comidas de ${Math.round(goals.protein/4)}g.<br><br>
+    <b>Proteína:</b> ${goals.protein}g/día (${goals.protKg} g/kg). Reparte en 4 comidas.<br><br>
     <b>Carbohidratos:</b> ${goals.carbs}g/día. Prioriza antes y después del entreno.<br><br>
     <b>Grasas:</b> ${goals.fat}g/día (${goals.fatKg} g/kg).<br><br>
-    ${hasCreatine ? `<b>✅ Creatina:</b> 5 g diarios a cualquier hora.<br><br>` : `<b>💡 Creatina:</b> añádela (5 g/día).<br><br>`}
-    ${hasWhey ? `<b>✅ Whey:</b> úsala para completar los ${goals.protein}g.<br><br>` : ''}
-    <b>Hidratación:</b> ~${(w*0.035).toFixed(1)} L de agua al día.`;
+    ${hasCreatine ? `<b>✅ Creatina:</b> 5g diarios.<br><br>` : `<b>💡 Creatina:</b> añádela (5g/día).<br><br>`}
+    ${hasWhey ? `<b>✅ Whey:</b> úsala para completar proteína.<br><br>` : ''}
+    <b>Hidratación:</b> ~${(w*0.035).toFixed(1)} L de agua.`;
 }
+
+/* ============ EJERCICIOS ============ */
 function renderExLibrary(){
   const container = document.getElementById('exLibrary');
   container.innerHTML = Object.entries(state.exercises).map(([bp, list])=>`<div class="ex-group"><h3>${bp}</h3><div class="ex-list">${list.length ? list.map(ex=>`<div class="ex-chip">${ex}<button onclick="removeExercise('${bp}','${ex.replace(/'/g,"\\'")}')">✕</button></div>`).join('') : '<span style="color:var(--muted); font-size:13px;">Vacío</span>'}</div></div>`).join('');
@@ -1064,13 +1418,15 @@ document.getElementById('addExBtn').onclick = ()=>{
   if(state.exercises[bp].includes(name)){ toast('⚠️ Ya existe', true); return; }
   state.exercises[bp].push(name);
   save(); renderExLibrary(); fillBodyPartSelects();
-  document.getElementById('newExName').value = ''; toast('✅ Ejercicio agregado');
+  document.getElementById('newExName').value = ''; toast('✅ Agregado');
 };
 window.removeExercise = function(bp, ex){
   if(!confirm(`¿Eliminar "${ex}"?`)) return;
   state.exercises[bp] = state.exercises[bp].filter(e=> e !== ex);
   save(); renderExLibrary(); fillBodyPartSelects();
 };
+
+/* ============ RESPALDO ============ */
 document.getElementById('exportBtn').onclick = ()=>{
   const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1097,6 +1453,7 @@ document.getElementById('importFile').onchange = (e)=>{
   };
   reader.readAsText(file);
 };
+
 function renderGreet(){
   const name = state.profile.name;
   const greet = document.getElementById('greetLine');
@@ -1107,11 +1464,12 @@ function renderGreet(){
   else if(hour < 19) saludo = 'Buenas tardes';
   else saludo = 'Buenas noches';
   const goals = calcNutrition();
+  const exp = EXPERIENCE[state.profile.experience] || EXPERIENCE.principiante;
   const goalTxt = goals ? ` · 🎯 ${goals.goalName}` : '';
-  greet.innerHTML = `${saludo}, <b>${name}</b>${goalTxt}`;
+  greet.innerHTML = `${saludo}, <b>${name}</b>${goalTxt} · ${exp.icon} ${exp.name}`;
 }
 function renderAll(){
-  renderGreet(); renderHistorial(); renderExLibrary(); renderExerciseOptionsForProgress(); renderNutricion(); renderVolume();
+  renderGreet(); renderHistorial(); renderExLibrary(); renderExerciseOptionsForProgress(); renderNutricion(); renderVolume(); renderReportes();
 }
 function initUI(){
   document.getElementById('wDate').value = todayISO();
@@ -1121,13 +1479,7 @@ function initUI(){
 }
 load();
 initUI();
-
-// Registrar service worker si existe (para PWA más robusta)
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  });
-}
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 </script>
 </body>
 </html>
