@@ -579,7 +579,7 @@ function getVolumeRange(expKey, freqKey, muscle){
 }
 
 /* ============ ESTADO ============ */
-const STORAGE_KEY = 'gymTracker_v10';
+const STORAGE_KEY = 'gymTracker_v11';
 const defaultState = {
   exercises: {
     'Pecho':      ['Press banca plano','Press inclinado','Aperturas con mancuernas','Fondos','Press declinado'],
@@ -664,7 +664,7 @@ function load(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } else {
       // Intentar migrar datos de versiones anteriores
-      const oldKeys = ['gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
+      const oldKeys = ['gymTracker_v10','gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
       for(const k of oldKeys){
         const old = localStorage.getItem(k);
         if(old){
