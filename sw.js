@@ -1,4 +1,4 @@
-const CACHE = 'entrenamiento-v9';
+const CACHE = 'entrenamiento-v10';
 const ASSETS = ['index.html', 'manifest.json', 'icono-192.png', 'icono-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,16 +17,24 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET') return;
-  if(e.request.headers.get('accept')?.includes('text/html') || e.request.url.endsWith('index.html') || e.request.url.endsWith('/')){
+
+  const isHTML = e.request.headers.get('accept')?.includes('text/html')
+              || e.request.url.endsWith('index.html')
+              || e.request.url.endsWith('/');
+
+  if(isHTML){
     e.respondWith(
-      fetch(e.request).then(r => {
-        const clone = r.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
-        return r;
-      }).catch(() => caches.match('index.html'))
+      fetch(e.request, { cache: 'no-store' })
+        .then(r => {
+          const clone = r.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
+          return r;
+        })
+        .catch(() => caches.match('index.html'))
     );
     return;
   }
+
   e.respondWith(
     caches.match(e.request).then(res => res || fetch(e.request).then(r => {
       const clone = r.clone();
