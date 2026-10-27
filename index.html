@@ -42,6 +42,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .btn{padding:13px 16px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;width:100%;margin-top:14px;}
 .btn:active{transform:scale(.98);}
 .btn-sec{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+.btn-sm{padding:6px 10px;font-size:12px;width:auto;margin-top:0;}
 .set-row{display:grid;grid-template-columns:26px 1fr 1fr 40px 32px;gap:5px;align-items:center;margin-top:8px;}
 .set-num{width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
 .set-row input{padding:9px 6px;font-size:15px;text-align:center;}
@@ -149,6 +150,26 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .mini-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
 #wExerciseSingle optgroup{font-weight:700;color:var(--accent);background:var(--card);}
 #wExerciseSingle option{color:var(--text);background:var(--card2);font-weight:400;}
+
+/* Panel Nutrición Semanal */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px;}
+.day-box{background:var(--card2);border-radius:8px;padding:8px 4px;text-align:center;border:1px solid var(--border);}
+.day-box .dname{font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.day-box .dicon{font-size:16px;}
+.day-box.ok{border-color:var(--green);background:rgba(46,204,113,.1);}
+.day-box.fail{border-color:var(--red);background:rgba(231,76,60,.1);}
+.day-box.partial{border-color:var(--yellow);background:rgba(241,196,15,.1);}
+.day-box.empty{border-color:var(--border);opacity:0.6;}
+
+/* Builder Rutinas */
+.routine-day{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;}
+.routine-day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.routine-ex-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.routine-ex-row:last-child{border-bottom:none;}
+.routine-add-ex{display:grid;grid-template-columns:1fr 40px 40px 36px;gap:4px;margin-top:8px;align-items:center;}
+.routine-add-ex select{padding:6px;font-size:11px;}
+.routine-add-ex input{padding:6px;font-size:11px;text-align:center;}
+.routine-add-ex button{padding:6px;font-size:14px;}
 
 /* Welcome */
 .welcome{position:fixed;inset:0;background:linear-gradient(160deg,#0f1115 0%,#1a1d24 100%);z-index:1000;overflow-y:auto;padding:20px 14px 40px;display:none;padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(40px + env(safe-area-inset-bottom));}
@@ -283,7 +304,10 @@ details.card-collapse .collapse-body{padding:0 14px 14px;}
         <label>Fecha</label><input type="date" id="wDate">
         <label>Ejercicio</label>
         <select id="wExerciseSingle"></select>
-        <div id="autoMuscleHint" class="info-box" style="display:none;"></div>
+        
+        <div id="lastSessionHint" class="info-box" style="display:none; background:rgba(0,0,0,.2); border-color:var(--border);"></div>
+        <div id="rirHint" class="info-box" style="display:none; margin-top:6px;"></div>
+        
         <label style="margin-top:14px;">Series — toca 🔥 si es dropset</label>
         <div id="setsContainer"></div>
         <button class="add-set" id="addSetBtn">+ Agregar serie</button>
@@ -303,6 +327,7 @@ details.card-collapse .collapse-body{padding:0 14px 14px;}
           <select id="filterYear"><option value="">Todos los años</option></select>
         </div>
       </div>
+      <div id="weeklyArchivesContainer"></div>
       <div id="historyContainer"></div>
     </section>
 
@@ -368,7 +393,17 @@ details.card-collapse .collapse-body{padding:0 14px 14px;}
         <button class="btn" id="saveProfileBtn">Guardar perfil</button>
       </div>
 
-      <div class="card"><h2>📊 Balance del día</h2><div id="balanceContent"></div></div>
+      <div class="card">
+        <h2>📊 Balance del día</h2>
+        <div id="balanceContent"></div>
+      </div>
+      
+      <!-- NUEVO: Progreso Semanal Nutrición -->
+      <div class="card">
+        <h2>📅 Cumplimiento Semanal</h2>
+        <div id="weeklyNutritionContent"></div>
+      </div>
+
       <details class="card-collapse"><summary>💬 Observaciones de hoy</summary><div class="collapse-body"><div id="obsContent"></div></div></details>
       <details class="card-collapse"><summary>🎯 Objetivos diarios calculados</summary><div class="collapse-body"><div id="goalsContent"></div></div></details>
 
@@ -618,6 +653,8 @@ const MUSCLE_VOL_MULT = {
   'Glúteo':1.05,'Cuádriceps':1.10,'Femoral':1.00,'Gemelos':0.80,'Core':0.65
 };
 
+const HEAVY_EXERCISES = ['Sentadilla','Peso muerto','Peso muerto convencional','Peso muerto rumano','Press banca plano','Press inclinado','Press militar','Dominadas','Remo con barra','Fondos','Prensa','Sentadilla búlgara','Peso muerto sumo','Jalón al pecho','Remo con mancuerna'];
+
 function getVolumeRange(expKey, freqKey, muscle){
   const e = EXPERIENCE[expKey] || EXPERIENCE.principiante;
   const freqMult = { '2-3': 0.75, '4': 0.9, '5': 1.0, '6+': 1.1 }[freqKey] || 1.0;
@@ -629,7 +666,22 @@ function getVolumeRange(expKey, freqKey, muscle){
   };
 }
 
-const STORAGE_KEY = 'gymTracker_v11';
+function getWeekRange(){
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1);
+  monday.setHours(0,0,0,0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23,59,59,999);
+  return {
+    start: monday.toISOString().split('T')[0],
+    end: sunday.toISOString().split('T')[0]
+  };
+}
+
+const STORAGE_KEY = 'gymTracker_v14';
 const defaultState = {
   exercises: {
     'Pecho':      ['Press banca plano','Press inclinado','Aperturas con mancuernas','Fondos','Press declinado'],
@@ -646,7 +698,11 @@ const defaultState = {
     'Core':       ['Plancha','Crunch','Elevación de piernas','Rueda abdominal','Plancha lateral','Mountain climbers']
   },
   workouts: [],
-  profile: { name:'', weight:null, height:null, age:null, sex:'M', goal:'maintain', activity:'1.55', experience:'principiante', frequency:'4', routineMode:'suggested', customRoutine:'' },
+  weeklyArchives: [],
+  profile: { 
+    name:'', weight:null, height:null, age:null, sex:'M', goal:'maintain', activity:'1.55', 
+    experience:'principiante', frequency:'4', routineMode:'suggested', customRoutine:[] 
+  },
   meals: [],
   customFoods: [],
   supplements: [
@@ -710,14 +766,16 @@ function load(){
       const parsed = JSON.parse(saved);
       const migrated = migrateExercises(parsed);
       state = {...defaultState, ...migrated};
+      if(typeof state.profile.customRoutine === 'string') state.profile.customRoutine = [];
     } else {
-      const oldKeys = ['gymTracker_v10','gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
+      const oldKeys = ['gymTracker_v13','gymTracker_v12','gymTracker_v11','gymTracker_v10','gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
       for(const k of oldKeys){
         const old = localStorage.getItem(k);
         if(old){
           const parsed = JSON.parse(old);
           const migrated = migrateExercises(parsed);
           state = {...defaultState, ...migrated};
+          if(typeof state.profile.customRoutine === 'string') state.profile.customRoutine = [];
           break;
         }
       }
@@ -739,6 +797,39 @@ function parseNum(v){
 }
 function findFood(name){ const low = name.toLowerCase().trim(); let f = FOOD_DB.find(x=> x.n.toLowerCase() === low); if(f) return f; f = state.customFoods.find(x=> x.n.toLowerCase() === low); return f || null; }
 function allFoods(){ return [...FOOD_DB, ...state.customFoods]; }
+
+function processWeeklyArchives(){
+  if(!state.weeklyArchives) state.weeklyArchives = [];
+  const { start: currentMonday } = getWeekRange();
+  
+  const weeks = {};
+  state.workouts.forEach(w => {
+    const d = new Date(w.date + 'T12:00:00');
+    const day = d.getDay() || 7;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - day + 1);
+    const key = monday.toISOString().split('T')[0];
+    if(!weeks[key]) {
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      weeks[key] = { start: key, end: sunday.toISOString().split('T')[0], workouts: [] };
+    }
+    weeks[key].workouts.push(w);
+  });
+
+  let changed = false;
+  Object.keys(weeks).forEach(key => {
+    if(key < currentMonday && !state.weeklyArchives.find(a => a.start === key)) {
+      const wk = weeks[key];
+      const totalSets = wk.workouts.reduce((s, w) => s + w.sets.length, 0);
+      const totalVol = wk.workouts.reduce((s, w) => s + w.sets.reduce((a, x) => a + x.reps*x.weight, 0), 0);
+      const days = new Set(wk.workouts.map(w => w.date)).size;
+      state.weeklyArchives.push({ start: key, end: wk.end, totalSets, totalVol, days });
+      changed = true;
+    }
+  });
+  if(changed) save();
+}
 
 /* Sanitizador global de inputs (iPhone) */
 document.addEventListener('input', e => {
@@ -900,11 +991,74 @@ function fillBodyPartSelects(){
 function updateAutoMuscleHint(){
   const val = document.getElementById('wExerciseSingle').value;
   const hint = document.getElementById('autoMuscleHint');
-  if(!val){ hint.style.display = 'none'; return; }
+  const rirHint = document.getElementById('rirHint');
+  const lastSessionHint = document.getElementById('lastSessionHint');
+  
+  if(!val){ 
+    hint.style.display = 'none'; 
+    rirHint.style.display = 'none';
+    lastSessionHint.style.display = 'none';
+    return; 
+  }
+  
   const parts = val.split('|||');
   const muscle = parts[0], exercise = parts[1];
+  
   hint.style.display = 'block';
   hint.innerHTML = `🎯 Se registrará en <b>${muscle}</b> · Ejercicio: <b>${exercise}</b>`;
+  
+  const history = state.workouts.filter(w => w.exercise === exercise).sort((a,b) => b.date.localeCompare(a.date));
+  const last = history.length > 0 ? history[0] : null;
+
+  if(last) {
+    const setsStr = last.sets.map((s, i) => `S${i+1}: ${s.reps}x${s.weight}kg`).join(' · ');
+    lastSessionHint.style.display = 'block';
+    lastSessionHint.innerHTML = `<div style="font-size:11px; font-weight:700; margin-bottom:4px; color:var(--accent);">🕒 Última vez (${fmtDate(last.date)})</div>${setsStr}`;
+  } else {
+    lastSessionHint.style.display = 'none';
+  }
+
+  const isHeavy = HEAVY_EXERCISES.includes(exercise);
+  rirHint.style.display = 'block';
+  
+  if(last) {
+    const maxWeight = Math.max(...last.sets.map(s=>s.weight));
+    const maxRepsAtMaxWeight = Math.max(...last.sets.filter(s=>s.weight === maxWeight).map(s=>s.reps));
+    
+    if(maxRepsAtMaxWeight >= 10 && isHeavy) {
+      const increment = maxWeight >= 100 ? 5 : 2.5;
+      const nextWeight = maxWeight + increment;
+      rirHint.style.background = 'rgba(46,204,113,.1)';
+      rirHint.style.borderColor = 'var(--green)';
+      rirHint.innerHTML = `📈 <b>¡Hora de progresar!</b> Hiciste ${maxRepsAtMaxWeight} reps a ${maxWeight}kg. Intenta subir a <b>${nextWeight} kg</b> (+${increment} kg) y apunta a <b>RIR 2-3</b>.`;
+    } else if(maxRepsAtMaxWeight >= 15 && !isHeavy) {
+      const increment = 1.25;
+      const nextWeight = maxWeight + increment;
+      rirHint.style.background = 'rgba(46,204,113,.1)';
+      rirHint.style.borderColor = 'var(--green)';
+      rirHint.innerHTML = `📈 <b>¡Hora de progresar!</b> Hiciste ${maxRepsAtMaxWeight} reps a ${maxWeight}kg. Sube a <b>${nextWeight} kg</b> (+${increment} kg) y apunta a <b>RIR 1-2</b>.`;
+    } else {
+      if(isHeavy) {
+        rirHint.style.background = 'rgba(79,140,255,.1)';
+        rirHint.style.borderColor = 'var(--accent)';
+        rirHint.innerHTML = `💡 <b>RIR Sugerido (pesado):</b> Deja 2-3 reps en reserva. Mantén el peso de ${maxWeight}kg o sube muy poco.`;
+      } else {
+        rirHint.style.background = 'rgba(243,156,18,.1)';
+        rirHint.style.borderColor = 'var(--orange)';
+        rirHint.innerHTML = `💡 <b>RIR Sugerido (aislamiento):</b> Apunta a RIR 1-2 con ${maxWeight}kg. En la última serie, puedes llegar a RIR 0 (fallo).`;
+      }
+    }
+  } else {
+    if(isHeavy) {
+      rirHint.style.background = 'rgba(79,140,255,.1)';
+      rirHint.style.borderColor = 'var(--accent)';
+      rirHint.innerHTML = `💡 <b>Sugerencia RIR (pesado):</b> Deja 2-3 reps en reserva. Prioriza técnica y sobrecarga progresiva.`;
+    } else {
+      rirHint.style.background = 'rgba(243,156,18,.1)';
+      rirHint.style.borderColor = 'var(--orange)';
+      rirHint.innerHTML = `💡 <b>Sugerencia RIR (aislamiento):</b> Busca RIR 1-2. En la última serie, puedes llegar a RIR 0 (fallo).`;
+    }
+  }
 }
 
 document.getElementById('wExerciseSingle').addEventListener('change', updateAutoMuscleHint);
@@ -948,9 +1102,12 @@ document.getElementById('saveBtn').onclick = ()=>{
   if(!sets.length){ toast('⚠️ Agrega al menos una serie', true); return; }
   state.workouts.push({id:Date.now(), date, bodyPart, exercise, sets});
   save();
+  
   document.getElementById('setsContainer').innerHTML = '';
   addSetRow(); addSetRow(); addSetRow();
   toast('✅ Guardado en ' + bodyPart);
+  
+  updateAutoMuscleHint();
   renderExerciseOptionsForProgress();
 };
 
@@ -968,6 +1125,23 @@ document.getElementById('filterYear').onchange = renderHistorial;
 document.getElementById('filterMonth').onchange = renderHistorial;
 function renderHistorial(){
   renderFilters();
+  
+  const archContainer = document.getElementById('weeklyArchivesContainer');
+  if(state.weeklyArchives && state.weeklyArchives.length > 0){
+    archContainer.innerHTML = `<details class="card-collapse" style="margin-bottom:12px;"><summary>📚 Resúmenes Semanales Anteriores</summary><div class="collapse-body">
+      ${state.weeklyArchives.sort((a,b)=> b.start.localeCompare(a.start)).map(a => `
+        <div class="day-card" style="padding:10px;">
+          <div class="day-head" style="margin-bottom:6px;"><div class="day-name" style="font-size:13px;">📅 ${fmtDate(a.start)} al ${fmtDate(a.end)}</div></div>
+          <div style="font-size:12px; color:var(--muted);">
+            Días entrenados: <b style="color:var(--text);">${a.days}</b> · Volumen total: <b style="color:var(--text);">${a.totalVol.toFixed(0)} kg</b> · Series: <b style="color:var(--text);">${a.totalSets}</b>
+          </div>
+        </div>
+      `).join('')}
+    </div></details>`;
+  } else {
+    archContainer.innerHTML = '';
+  }
+
   const fy = document.getElementById('filterYear').value;
   const fm = document.getElementById('filterMonth').value;
   const container = document.getElementById('historyContainer');
@@ -1075,8 +1249,8 @@ function renderChart(data, unit, color){
 
 /* ============ VOLUMEN ============ */
 function calcWeeklyVolume(){
-  const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0];
-  const recent = state.workouts.filter(w => w.date >= cutoff);
+  const { start, end } = getWeekRange();
+  const recent = state.workouts.filter(w => w.date >= start && w.date <= end);
   const vol = {};
   recent.forEach(w=>{
     if(!vol[w.bodyPart]) vol[w.bodyPart] = { sets:0, drops:0, sessions:{} };
@@ -1102,6 +1276,7 @@ function buildSuggestedRoutine(freq){
 }
 
 function renderVolume(){
+  processWeeklyArchives();
   const container = document.getElementById('volumeContent');
   const vol = calcWeeklyVolume();
   const ORDER = ['Pecho','Espalda','Trapecio','Hombros','Bíceps','Tríceps','Antebrazo','Glúteo','Cuádriceps','Femoral','Gemelos','Core'];
@@ -1109,7 +1284,9 @@ function renderVolume(){
   const freq = state.profile.frequency || '4';
   const expData = EXPERIENCE[exp];
   const freqData = FREQUENCIES[freq];
+  const { start, end } = getWeekRange();
   const alerts = [];
+  
   ORDER.forEach(bp=>{
     const s = vol[bp]?.sets || 0;
     const z = getVolumeZone(s, exp, freq, bp);
@@ -1129,9 +1306,44 @@ function renderVolume(){
   const routineMode = state.profile.routineMode || 'suggested';
   const suggestedRoutine = buildSuggestedRoutine(freq);
 
+  let builderHtml = '';
+  if(routineMode === 'custom'){
+    if(!Array.isArray(state.profile.customRoutine)) state.profile.customRoutine = [];
+    if(state.profile.customRoutine.length === 0) {
+       builderHtml = `<p class="empty" style="margin-bottom:12px;">Aún no tienes días. Toca "Añadir Día" para empezar.</p>`;
+    } else {
+       state.profile.customRoutine.forEach((day, dIdx) => {
+         builderHtml += `<div class="routine-day">
+            <div class="routine-day-head">
+              <b>${day.name || 'Día ' + (dIdx+1)}</b>
+              <button class="del-btn" style="padding:2px;" onclick="removeRoutineDay(${dIdx})">🗑️</button>
+            </div>
+            <div>`;
+         (day.exercises || []).forEach((ex, eIdx) => {
+           builderHtml += `<div class="routine-ex-row">
+              <span>${ex.name}</span>
+              <span style="color:var(--muted);">${ex.sets} x ${ex.reps} <button style="background:none;border:none;color:var(--red);padding-left:6px;" onclick="removeRoutineEx(${dIdx},${eIdx})">✕</button></span>
+           </div>`;
+         });
+         builderHtml += `</div>
+            <div class="routine-add-ex">
+              <select id="rExSel_${dIdx}">
+                ${Object.values(state.exercises).flat().map(e => `<option value="${e}">${e}</option>`).join('')}
+              </select>
+              <input type="text" id="rExSets_${dIdx}" inputmode="numeric" placeholder="Sets">
+              <input type="text" id="rExReps_${dIdx}" placeholder="Reps">
+              <button class="btn btn-sec" onclick="addRoutineEx(${dIdx})">+</button>
+            </div>
+         </div>`;
+       });
+    }
+    builderHtml += `<button class="btn btn-sec" style="margin-top:10px;" onclick="addRoutineDay()">+ Añadir Día</button>`;
+  }
+
   container.innerHTML = `
     <div class="card">
-      <h2>📊 Resumen semanal</h2>
+      <h2>📊 Resumen Semana Actual</h2>
+      <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">Rango: ${fmtDate(start)} al ${fmtDate(end)}</p>
       <div class="stats">
         <div class="stat"><div class="stat-value">${totalSetsWeek}</div><div class="stat-label">Series</div></div>
         <div class="stat"><div class="stat-value" style="color:var(--yellow)">${totalDropsWeek}</div><div class="stat-label">🔥 Drops</div></div>
@@ -1171,9 +1383,7 @@ function renderVolume(){
       </div>
       ${routineMode === 'suggested'
         ? `<div class="info-box"><b>Rutina sugerida para ${freqData.name}:</b><br><br>${suggestedRoutine}</div>`
-        : `<label>Escribe tu propia rutina</label>
-           <textarea id="customRoutineText" placeholder="Ej:\nDía 1 - Pecho y tríceps: Press banca 4x8...">${state.profile.customRoutine || ''}</textarea>
-           <button class="btn btn-sec" onclick="saveCustomRoutine()">💾 Guardar mi rutina</button>`}
+        : builderHtml}
     </div>
 
     <details class="card-collapse">
@@ -1191,14 +1401,34 @@ function renderVolume(){
       </div>
     </details>`;
 }
+
 window.setRoutineMode = function(mode){
   state.profile.routineMode = mode;
   save(); renderVolume();
 };
-window.saveCustomRoutine = function(){
-  const text = document.getElementById('customRoutineText').value;
-  state.profile.customRoutine = text;
-  save(); toast('✅ Rutina guardada');
+window.addRoutineDay = function(){
+  const name = prompt('Nombre del día (ej. Día 1 - Pecho y Tríceps):', 'Día ' + (state.profile.customRoutine.length + 1));
+  if(name === null) return;
+  if(!Array.isArray(state.profile.customRoutine)) state.profile.customRoutine = [];
+  state.profile.customRoutine.push({ name: name.trim() || 'Día', exercises: [] });
+  save(); renderVolume();
+};
+window.removeRoutineDay = function(dIdx){
+  if(!confirm('¿Eliminar este día completo?')) return;
+  state.profile.customRoutine.splice(dIdx, 1);
+  save(); renderVolume();
+};
+window.addRoutineEx = function(dIdx){
+  const ex = document.getElementById(`rExSel_${dIdx}`).value;
+  const sets = document.getElementById(`rExSets_${dIdx}`).value.trim();
+  const reps = document.getElementById(`rExReps_${dIdx}`).value.trim();
+  if(!sets || !reps) { toast('⚠️ Ingresa series y reps', true); return; }
+  state.profile.customRoutine[dIdx].exercises.push({ name: ex, sets: sets, reps: reps });
+  save(); renderVolume();
+};
+window.removeRoutineEx = function(dIdx, eIdx){
+  state.profile.customRoutine[dIdx].exercises.splice(eIdx, 1);
+  save(); renderVolume();
 };
 
 /* ============ REPORTES ============ */
@@ -1250,18 +1480,18 @@ function renderReportsByWeek(container){
   const weeks = {};
   state.workouts.forEach(w=>{
     const d = new Date(w.date + 'T12:00:00');
-    const startOfYear = new Date(d.getFullYear(), 0, 1);
-    const days = Math.floor((d - startOfYear) / (24*60*60*1000));
-    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-    const key = `${d.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+    const day = d.getDay() || 7;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - day + 1);
+    const key = monday.toISOString().split('T')[0];
     (weeks[key] ||= { workouts:[], meals:[] }).workouts.push(w);
   });
   state.meals.forEach(m=>{
     const d = new Date(m.date + 'T12:00:00');
-    const startOfYear = new Date(d.getFullYear(), 0, 1);
-    const days = Math.floor((d - startOfYear) / (24*60*60*1000));
-    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-    const key = `${d.getFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+    const day = d.getDay() || 7;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - day + 1);
+    const key = monday.toISOString().split('T')[0];
     (weeks[key] ||= { workouts:[], meals:[] }).meals.push(m);
   });
   const keys = Object.keys(weeks).sort().reverse();
@@ -1281,7 +1511,7 @@ function renderReportsByWeek(container){
     return `
       <div class="day-card">
         <div class="day-head">
-          <div><div class="day-name">📊 Semana ${key}</div><div class="day-date">${uniqueDays} días entrenados</div></div>
+          <div><div class="day-name">📊 Semana del ${fmtDate(key)}</div><div class="day-date">${uniqueDays} días entrenados</div></div>
           <span class="badge ${protAdh >= 90 ? 'badge-green' : protAdh >= 70 ? 'badge-yellow' : 'badge-red'}">P: ${protAdh.toFixed(0)}%</span>
         </div>
         <div class="mini-stats">
@@ -1333,7 +1563,7 @@ function renderNutricion(){
   document.getElementById('nExp').value = p.experience || 'principiante';
   document.getElementById('nFreq').value = p.frequency || '4';
   renderGoalPicker();
-  renderGoals(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderSupplements(); renderInfo(); renderCustomFoods(); fillFoodDatalist();
+  renderGoals(); renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderSupplements(); renderInfo(); renderCustomFoods(); fillFoodDatalist();
 }
 document.getElementById('saveProfileBtn').onclick = ()=>{
   state.profile.weight = parseNum(document.getElementById('nWeight').value) || null;
@@ -1370,6 +1600,60 @@ function renderBalance(){
     ${macroRow('Grasas', consumed.fat, goals.fat, 'g', 'fat')}
   `;
 }
+
+/* NUEVA FUNCIÓN: Progreso semanal de nutrición */
+function renderWeeklyNutrition(){
+  const goals = calcNutrition();
+  const container = document.getElementById('weeklyNutritionContent');
+  if(!goals){ container.innerHTML = '<p class="empty">Completa tu perfil.</p>'; return; }
+  
+  const { start } = getWeekRange();
+  const todayStr = todayISO();
+  const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  
+  let html = '<div class="week-grid">';
+  
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start + 'T12:00:00');
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    
+    const dayMeals = state.meals.filter(m => m.date === dateStr);
+    const consumed = dayMeals.reduce((a,m)=>({ prot:a.prot+m.prot, carb:a.carb+m.carb, fat:a.fat+m.fat }), {prot:0, carb:0, fat:0});
+    const consumedCal = consumed.prot*4 + consumed.carb*4 + consumed.fat*9;
+    
+    let statusClass = 'empty';
+    let icon = '⚪';
+    
+    if(dateStr === todayStr) {
+      // Día actual: evaluar en tiempo real
+      if(dayMeals.length === 0) { statusClass = 'partial'; icon = '⏳'; }
+      else if(consumedCal >= goals.calories * 0.85 && consumed.prot >= goals.protein * 0.9) { statusClass = 'ok'; icon = '✅'; }
+      else { statusClass = 'partial'; icon = '🟡'; }
+    } else if (dateStr < todayStr) {
+      // Días pasados
+      if(dayMeals.length === 0) { statusClass = 'fail'; icon = '❌'; }
+      else if(consumedCal >= goals.calories * 0.85 && consumedCal <= goals.calories * 1.15 && consumed.prot >= goals.protein * 0.9) { statusClass = 'ok'; icon = '✅'; }
+      else { statusClass = 'partial'; icon = '🟡'; }
+    } else {
+      // Días futuros
+      statusClass = 'empty'; icon = '⚪';
+    }
+
+    html += `<div class="day-box ${statusClass}">
+      <div class="dname">${days[i]}</div>
+      <div class="dicon">${icon}</div>
+    </div>`;
+  }
+  
+  html += '</div>';
+  html += `<div class="info-box" style="margin-top:10px; padding:8px; font-size:11px;">
+    ✅ Cumpliste · 🟡 Parcial / En curso · ❌ Fallaste (sin registro o macros muy bajos)
+  </div>`;
+  
+  container.innerHTML = html;
+}
+
 function macroRow(name, consumed, target, unit, type){
   const pct = target > 0 ? Math.min(100, (consumed/target)*100) : 0;
   const remaining = target - consumed;
@@ -1461,7 +1745,7 @@ document.getElementById('addFoodBtn').onclick = ()=>{
   document.getElementById('foodInput').value = '';
   document.getElementById('foodGrams').value = '';
   document.getElementById('foodPreview').style.display = 'none';
-  renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
+  renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
   toast('✅ Añadido');
 };
 document.querySelectorAll('.tabs-mini button[data-mode]').forEach(btn=>{
@@ -1520,7 +1804,7 @@ document.getElementById('addManualBtn').onclick = ()=>{
   save();
   ['mName','mProt','mCarb','mFat','mPortionSize','mGrams'].forEach(id=> document.getElementById(id).value = '');
   document.getElementById('manualPreview').style.display = 'none';
-  renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderCustomFoods(); fillFoodDatalist(); renderGoals();
+  renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderCustomFoods(); fillFoodDatalist(); renderGoals();
   toast('✅ Guardado');
 };
 function renderMeals(){
@@ -1571,10 +1855,10 @@ window.editMeal = function(id){
     meal.fat = round(meal.fat * ratio, 2);
     meal.grams = grams;
   }
-  save(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
+  save(); renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
   toast('✅ Editado');
 };
-window.deleteMeal = function(id){ if(!confirm('¿Eliminar este alimento?')) return; state.meals = state.meals.filter(m=> m.id !== id); save(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals(); toast('🗑️ Eliminado'); };
+window.deleteMeal = function(id){ if(!confirm('¿Eliminar este alimento?')) return; state.meals = state.meals.filter(m=> m.id !== id); save(); renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals(); toast('🗑️ Eliminado'); };
 function renderCustomFoods(){
   const container = document.getElementById('customFoodsList');
   if(!state.customFoods.length){ container.innerHTML = '<p class="empty">Aún no has guardado alimentos personalizados.</p>'; return; }
@@ -1628,7 +1912,7 @@ window.quickAddFood = function(foodName, grams){
   const carb = round(food.c * grams / 100, 2);
   const fat = round(food.f * grams / 100, 2);
   state.meals.push({ id: Date.now(), date: todayISO(), name: food.n, grams, prot, carb, fat, time: 'Snack', cat: food.cat, e: food.e });
-  save(); renderBalance(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
+  save(); renderBalance(); renderWeeklyNutrition(); renderObservations(); renderMeals(); renderSuggestions(); renderGoals();
   toast(`✅ ${grams}g de ${food.n}`);
 };
 function renderSupplements(){
