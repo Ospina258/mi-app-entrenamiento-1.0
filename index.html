@@ -305,6 +305,8 @@ details.card-collapse .collapse-body{padding:0 14px 14px;}
         <label>Ejercicio</label>
         <select id="wExerciseSingle"></select>
         
+        <!-- CORRECCIÓN: Se añadieron los divs que faltaban para los avisos -->
+        <div id="autoMuscleHint" class="info-box" style="display:none;"></div>
         <div id="lastSessionHint" class="info-box" style="display:none; background:rgba(0,0,0,.2); border-color:var(--border);"></div>
         <div id="rirHint" class="info-box" style="display:none; margin-top:6px;"></div>
         
@@ -398,7 +400,6 @@ details.card-collapse .collapse-body{padding:0 14px 14px;}
         <div id="balanceContent"></div>
       </div>
       
-      <!-- NUEVO: Progreso Semanal Nutrición -->
       <div class="card">
         <h2>📅 Cumplimiento Semanal</h2>
         <div id="weeklyNutritionContent"></div>
@@ -681,7 +682,7 @@ function getWeekRange(){
   };
 }
 
-const STORAGE_KEY = 'gymTracker_v14';
+const STORAGE_KEY = 'gymTracker_v15';
 const defaultState = {
   exercises: {
     'Pecho':      ['Press banca plano','Press inclinado','Aperturas con mancuernas','Fondos','Press declinado'],
@@ -768,7 +769,7 @@ function load(){
       state = {...defaultState, ...migrated};
       if(typeof state.profile.customRoutine === 'string') state.profile.customRoutine = [];
     } else {
-      const oldKeys = ['gymTracker_v13','gymTracker_v12','gymTracker_v11','gymTracker_v10','gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
+      const oldKeys = ['gymTracker_v14','gymTracker_v13','gymTracker_v12','gymTracker_v11','gymTracker_v10','gymTracker_v9','gymTracker_v8','gymTracker_v7','gymTracker_v6','gymTracker_v5'];
       for(const k of oldKeys){
         const old = localStorage.getItem(k);
         if(old){
@@ -995,33 +996,35 @@ function updateAutoMuscleHint(){
   const lastSessionHint = document.getElementById('lastSessionHint');
   
   if(!val){ 
-    hint.style.display = 'none'; 
-    rirHint.style.display = 'none';
-    lastSessionHint.style.display = 'none';
+    if(hint) hint.style.display = 'none'; 
+    if(rirHint) rirHint.style.display = 'none';
+    if(lastSessionHint) lastSessionHint.style.display = 'none';
     return; 
   }
   
   const parts = val.split('|||');
   const muscle = parts[0], exercise = parts[1];
   
-  hint.style.display = 'block';
-  hint.innerHTML = `🎯 Se registrará en <b>${muscle}</b> · Ejercicio: <b>${exercise}</b>`;
+  if(hint){
+    hint.style.display = 'block';
+    hint.innerHTML = `🎯 Se registrará en <b>${muscle}</b> · Ejercicio: <b>${exercise}</b>`;
+  }
   
   const history = state.workouts.filter(w => w.exercise === exercise).sort((a,b) => b.date.localeCompare(a.date));
   const last = history.length > 0 ? history[0] : null;
 
-  if(last) {
+  if(last && lastSessionHint) {
     const setsStr = last.sets.map((s, i) => `S${i+1}: ${s.reps}x${s.weight}kg`).join(' · ');
     lastSessionHint.style.display = 'block';
     lastSessionHint.innerHTML = `<div style="font-size:11px; font-weight:700; margin-bottom:4px; color:var(--accent);">🕒 Última vez (${fmtDate(last.date)})</div>${setsStr}`;
-  } else {
+  } else if(lastSessionHint) {
     lastSessionHint.style.display = 'none';
   }
 
   const isHeavy = HEAVY_EXERCISES.includes(exercise);
-  rirHint.style.display = 'block';
+  if(rirHint) rirHint.style.display = 'block';
   
-  if(last) {
+  if(last && rirHint) {
     const maxWeight = Math.max(...last.sets.map(s=>s.weight));
     const maxRepsAtMaxWeight = Math.max(...last.sets.filter(s=>s.weight === maxWeight).map(s=>s.reps));
     
@@ -1048,7 +1051,7 @@ function updateAutoMuscleHint(){
         rirHint.innerHTML = `💡 <b>RIR Sugerido (aislamiento):</b> Apunta a RIR 1-2 con ${maxWeight}kg. En la última serie, puedes llegar a RIR 0 (fallo).`;
       }
     }
-  } else {
+  } else if(rirHint) {
     if(isHeavy) {
       rirHint.style.background = 'rgba(79,140,255,.1)';
       rirHint.style.borderColor = 'var(--accent)';
@@ -1600,8 +1603,6 @@ function renderBalance(){
     ${macroRow('Grasas', consumed.fat, goals.fat, 'g', 'fat')}
   `;
 }
-
-/* NUEVA FUNCIÓN: Progreso semanal de nutrición */
 function renderWeeklyNutrition(){
   const goals = calcNutrition();
   const container = document.getElementById('weeklyNutritionContent');
@@ -1626,17 +1627,14 @@ function renderWeeklyNutrition(){
     let icon = '⚪';
     
     if(dateStr === todayStr) {
-      // Día actual: evaluar en tiempo real
       if(dayMeals.length === 0) { statusClass = 'partial'; icon = '⏳'; }
       else if(consumedCal >= goals.calories * 0.85 && consumed.prot >= goals.protein * 0.9) { statusClass = 'ok'; icon = '✅'; }
       else { statusClass = 'partial'; icon = '🟡'; }
     } else if (dateStr < todayStr) {
-      // Días pasados
       if(dayMeals.length === 0) { statusClass = 'fail'; icon = '❌'; }
       else if(consumedCal >= goals.calories * 0.85 && consumedCal <= goals.calories * 1.15 && consumed.prot >= goals.protein * 0.9) { statusClass = 'ok'; icon = '✅'; }
       else { statusClass = 'partial'; icon = '🟡'; }
     } else {
-      // Días futuros
       statusClass = 'empty'; icon = '⚪';
     }
 
